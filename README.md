@@ -1,6 +1,8 @@
-# Altar Initiative
+# The Altar Initiative
 
-The Altar Initiative is a private coordination hub for a church Prayer Room, paired with a simple public calendar and updates signup.
+The Altar Initiative is a shared daily prayer rhythm—morning, noon, and evening—centered on the presence of Jesus, Scripture, worship, and prayer for awakening in our region.
+
+This product is the private coordination hub for the Prayer Room, paired with a simple public calendar and updates signup. It supports the initiative without turning a shared call to prayer into a public scheduling system.
 
 ## Product boundaries
 
@@ -14,8 +16,8 @@ The Altar Initiative is a private coordination hub for a church Prayer Room, pai
 - [Product brief](docs/product-brief.md)
 - [Architecture](docs/architecture.md)
 - [Decisions](docs/decisions.md)
+- [Brand direction](docs/brand-direction.md)
 
 ## Proposed stack
 
 Next.js + TypeScript, PostgreSQL/Supabase, Supabase Auth, Resend for email, Twilio for SMS, and Vercel for hosting.
-

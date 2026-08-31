@@ -2,15 +2,17 @@
 
 ## Purpose
 
-Provide a dependable, welcoming central hub for the church's Prayer Room: public gatherings are easy to discover, while vetted volunteers and coordinators can sustain a reliable rhythm of prayer.
+Support the Altar Initiative: a shared daily rhythm of prayer—morning, noon, and evening—centered on the presence of Jesus, Scripture, worship, and prayer for awakening in our region.
 
-The product should feel reverent, clear, and hospitable—not like a generic workforce scheduling tool.
+The product gives coordinators and vetted volunteers a dependable way to sustain that rhythm in the Prayer Room, while making public gatherings and the invitation to participate easy to discover.
+
+The product should feel reverent, clear, and hospitable—not like a generic workforce scheduling tool. Its language should frame serving as shared participation in a priestly calling, not merely filling a slot.
 
 ## Audiences and access
 
 ### Public visitor
 
-May view the public calendar, learn about the Altar Initiative, subscribe to updates, and submit an interest form to serve. Public visitors cannot see volunteer shifts, volunteer identities, room-operating notes, or coverage gaps.
+May view public Morning Altar, Evening Altar, and special gatherings; learn about the Altar Initiative; subscribe to updates; and submit an interest form to serve. Public visitors cannot see volunteer shifts, volunteer identities, room-operating notes, or coverage gaps.
 
 ### Prospective volunteer
 
@@ -30,15 +32,17 @@ Manages coordinator access, messaging settings, retention settings, and audit ac
 
 ## MVP capabilities
 
-1. **Public calendar** — public gatherings and special events only; no volunteer availability or names.
-2. **Updates signup** — clear consent for email and/or SMS, with opt-out management.
-3. **Serve-interest form** — an invitation to begin a conversation, not a direct shift signup.
-4. **Approval workflow** — coordinators review an applicant and create an approved volunteer account.
-5. **Private shift schedule** — eligible volunteers see their own shifts plus approved open slots.
-6. **Room coordination** — coordinators schedule room uses and prevent conflicts with volunteer coverage.
-7. **Reminders** — confirmation, scheduled reminders, unconfirmed-shift follow-up, and coordinator escalation.
-8. **Coordinator coverage view** — open slots, coverage percentage, recurring gap windows, and volunteer workload.
-9. **Weekly initiative theme** — coordinators publish a short theme and practical shift notes for volunteers; a public-safe version may be shown on the public page.
+1. **Public calendar** — public Morning Altar, Evening Altar, and special gatherings only; no volunteer availability or names.
+2. **Daily rhythm** — a public-safe view of the morning, noon, and evening rhythm, with room-based gatherings distinguished from a personal noon pause wherever someone is.
+3. **Updates signup** — clear consent for email and/or SMS, with opt-out management.
+4. **Serve-interest form** — an invitation to begin a conversation, not a direct shift signup; it gathers availability, anticipated participation, and ways someone would like to serve.
+5. **Daily focus** — publish a Scripture-centered focus and links to shared Psalms or worship resources for each day.
+6. **Approval workflow** — coordinators review an applicant and create an approved volunteer account.
+7. **Private shift schedule** — eligible volunteers see their own shifts plus approved open slots.
+8. **Room coordination** — coordinators schedule room uses and prevent conflicts with volunteer coverage.
+9. **Reminders** — confirmation, scheduled reminders, unconfirmed-shift follow-up, and coordinator escalation.
+10. **Coordinator coverage view** — open slots, coverage percentage, recurring gap windows, and volunteer workload.
+11. **Initiative focus** — coordinators publish a short focus and practical shift notes for volunteers; a public-safe version may be shown on the public page.
 
 ## Explicitly out of scope
 
@@ -65,11 +69,12 @@ Manages coordinator access, messaging settings, retention settings, and audit ac
 4. A volunteer reports an absence or swap request; the coordinator resolves it if needed.
 5. The dashboard flags any unfilled or unconfirmed shifts for targeted outreach.
 
-### Public gathering
+### Public gathering and daily rhythm
 
-1. A coordinator creates an event and marks it public.
-2. The event appears on the public calendar with title, time, location, and visitor-safe description.
-3. Updates subscribers may receive a suitable announcement, subject to consent.
+1. A coordinator creates a Morning Altar, Evening Altar, or special gathering and marks it public.
+2. The event appears on the public calendar with title, time, location, online/in-person details, and a visitor-safe description.
+3. The daily rhythm page shows a noon prayer moment without implying that someone must attend the Prayer Room.
+4. Updates subscribers may receive a suitable announcement, subject to consent.
 
 ## Success signals
 
@@ -77,4 +82,3 @@ Manages coordinator access, messaging settings, retention settings, and audit ac
 - Volunteers reliably receive and acknowledge reminders without seeing internal data.
 - Public visitors can find gatherings and express interest without receiving scheduling access.
 - Coverage trends show which times require recruiting or a schedule redesign.
-

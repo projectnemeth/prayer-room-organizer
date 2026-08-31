@@ -16,7 +16,6 @@ The product will not intake, store, route, or report on prayer requests.
 
 Email and SMS preferences are separate. Scheduling SMS is opt-in only, and every send is auditable.
 
-## 2026-08-31 — Source language pending attachment availability
+## 2026-08-31 — Altar Initiative language and rhythm guide the product
 
-Use “Altar Initiative” as the working product name. The referenced announcement DOCX was unavailable at the supplied path during setup, so its additional language and visual cues have not been copied or inferred.
-
+Use “The Altar Initiative” as the product name and a “daily prayer rhythm” as its organizing metaphor. Public-facing product language may name the Morning Altar, noon prayer moment, Evening Altar, shared Scripture/Psalms and worship resources, and prayer for awakening in our region. These concepts support the product but do not change its access boundaries.

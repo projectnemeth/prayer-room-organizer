@@ -23,6 +23,7 @@ Provider adapters should isolate email and SMS integrations so either provider c
 Public site
   /                         Altar Initiative overview
   /calendar                 Public gatherings
+  /rhythm                   Morning / noon / evening rhythm and daily focus
   /serve                    Interest form
   /updates                  Email/SMS consent form
 
@@ -61,7 +62,7 @@ room_events(id, title, starts_at, ends_at, visibility, event_type, description, 
 shift_templates(id, weekday, starts_at, ends_at, required_volunteers, eligibility_rule)
 shifts(id, template_id, starts_at, ends_at, status, room_event_id)
 shift_assignments(id, shift_id, profile_id, assignment_status, confirmed_at)
-weekly_themes(id, starts_on, title, public_summary, volunteer_notes, published_at)
+prayer_focuses(id, date, title, public_summary, scripture_reference, resource_url, volunteer_notes, published_at)
 message_jobs(id, channel, template_key, recipient_profile_id, scheduled_for, status, provider_message_id)
 audit_log(id, actor_profile_id, action, entity_type, entity_id, created_at)
 ```
@@ -84,4 +85,3 @@ Keep message content limited to scheduling and initiative communications. Do not
 4. Build private schedule, assignment, and absence/swap workflows.
 5. Add reminder jobs, delivery monitoring, and coverage reporting.
 6. Add room-conflict rules, audit logging, accessibility review, and launch hardening.
-
