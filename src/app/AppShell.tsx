@@ -1,6 +1,5 @@
-import { useEffect, useState, type PropsWithChildren } from 'react'
+import type { PropsWithChildren } from 'react'
 import { Link } from 'react-router-dom'
-import { getSupabaseBrowserClient, hasSupabaseBrowserConfig } from '../lib/supabase'
 
 const publicNavigation = [
   { label: 'Home', to: '/' },
@@ -10,41 +9,6 @@ const publicNavigation = [
 ]
 
 export function AppShell({ children }: PropsWithChildren) {
-  const [role, setRole] = useState<'volunteer' | 'coordinator' | 'admin' | null>(null)
-
-  useEffect(() => {
-    let active = true
-
-    async function resolveNavigationRole() {
-      if (!hasSupabaseBrowserConfig(import.meta.env)) return
-      const client = getSupabaseBrowserClient()
-      const { data: userData } = await client.auth.getUser()
-      if (!userData.user) return
-      const { data: profile } = await client
-        .from('profiles')
-        .select('role, status')
-        .eq('id', userData.user.id)
-        .maybeSingle()
-      if (active && profile?.status === 'active' && ['volunteer', 'coordinator', 'admin'].includes(profile.role)) {
-        setRole(profile.role as 'volunteer' | 'coordinator' | 'admin')
-      }
-    }
-
-    void resolveNavigationRole()
-    return () => { active = false }
-  }, [])
-
-  const privateNavigation = role === 'volunteer'
-    ? [{ label: 'Volunteer portal', to: '/portal' }]
-    : role === 'coordinator' || role === 'admin'
-      ? [
-          { label: 'Coordinator', to: '/coordinator' },
-          { label: 'Serving interests', to: '/coordinator/interests' },
-          { label: 'Coverage', to: '/coordinator/schedule' },
-          ...(role === 'admin' ? [{ label: 'People & access', to: '/coordinator/people' }] : []),
-        ]
-      : []
-
   return (
     <div className="min-h-screen bg-altar-parchment text-altar-ink">
       <a className="skip-link" href="#main-content">
@@ -67,19 +31,6 @@ export function AppShell({ children }: PropsWithChildren) {
             </ul>
           </nav>
         </div>
-        {privateNavigation.length > 0 ? (
-          <div className="border-t border-altar-stone/80 bg-altar-stone/20 px-5 py-3 sm:px-8">
-            <nav aria-label="Private navigation" className="mx-auto max-w-6xl">
-              <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold text-altar-teal sm:gap-x-6">
-                {privateNavigation.map((item) => (
-                  <li key={item.to}>
-                    <Link className="focus-ring rounded-sm hover:text-altar-gold" to={item.to}>{item.label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
-        ) : null}
       </header>
       <div id="main-content">{children}</div>
       <footer className="border-t border-altar-stone px-5 py-8 text-center text-sm text-altar-sage sm:px-8">
