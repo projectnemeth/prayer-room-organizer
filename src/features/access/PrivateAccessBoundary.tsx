@@ -4,7 +4,8 @@ import { getSupabaseBrowserClient, hasSupabaseBrowserConfig } from "../../lib/su
 
 export type PrivateProfileRole = "volunteer" | "coordinator" | "admin";
 
-interface ActivePrivateProfile {
+export interface ActivePrivateProfile {
+  id: string;
   displayName: string;
   role: PrivateProfileRole;
 }
@@ -52,7 +53,7 @@ export function PrivateAccessBoundary({ children, requireCoordinator = false }: 
 
       const { data: profile, error: profileError } = await client
         .from("profiles")
-        .select("display_name, role, status")
+        .select("id, display_name, role, status")
         .eq("id", userData.user.id)
         .maybeSingle();
 
@@ -67,6 +68,7 @@ export function PrivateAccessBoundary({ children, requireCoordinator = false }: 
       }
 
       const privateProfile: ActivePrivateProfile = {
+        id: profile.id,
         displayName: profile.display_name,
         role: profile.role as PrivateProfileRole,
       };

@@ -43,7 +43,7 @@ function VolunteerPortalRoute() {
 function CoordinatorRoute() {
   return (
     <PrivateAccessBoundary requireCoordinator>
-      {() => <CoordinatorWorkspace />}
+      {(profile) => <CoordinatorWorkspace currentProfileId={profile.id} currentRole={profile.role === 'admin' ? 'admin' : 'coordinator'} />}
     </PrivateAccessBoundary>
   )
 }
