@@ -8,6 +8,8 @@ export interface PublicGathering {
   title: string;
   startsAt: string;
   endsAt: string;
+  /** Used when a gathering is announced but its final time is not yet set. */
+  timeLabel?: string;
   locationType: GatheringLocation;
   locationLabel: string;
   description: string;

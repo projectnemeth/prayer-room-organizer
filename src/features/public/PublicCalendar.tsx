@@ -6,90 +6,216 @@ interface PublicCalendarProps {
   gatherings?: PublicGathering[];
 }
 
+type CalendarView = "month" | "week";
+
 const kindLabels: Record<GatheringKind, string> = {
   morning: "Morning Altar",
   evening: "Evening Altar",
   special: "Special gathering",
 };
 
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(value));
+const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function dateKey(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-function formatDay(value: string) {
-  return new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date(value));
+function gatheringDateKey(gathering: PublicGathering) {
+  return gathering.startsAt.slice(0, 10);
 }
 
-/** A visitor-safe gathering calendar. Its data contract deliberately excludes volunteer availability. */
+function parseDateKey(value: string) {
+  return new Date(`${value}T12:00:00`);
+}
+
+function startOfWeek(value: Date) {
+  const start = new Date(value);
+  start.setDate(start.getDate() - start.getDay());
+  return start;
+}
+
+function addDays(value: Date, count: number) {
+  const next = new Date(value);
+  next.setDate(next.getDate() + count);
+  return next;
+}
+
+function addMonths(value: Date, count: number) {
+  return new Date(value.getFullYear(), value.getMonth() + count, 1);
+}
+
+function formatCalendarHeading(value: Date) {
+  return new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(value);
+}
+
+function formatWeekHeading(start: Date) {
+  const end = addDays(start, 6);
+  const monthDay = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+  return `${monthDay.format(start)}–${monthDay.format(end)}, ${end.getFullYear()}`;
+}
+
+function formatDayLabel(value: Date) {
+  return new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(value);
+}
+
+function eventTime(gathering: PublicGathering) {
+  if (gathering.timeLabel) return "TBA";
+  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(gathering.startsAt));
+}
+
+function CalendarEvent({ gathering }: { gathering: PublicGathering }) {
+  const colour = gathering.kind === "morning" ? "border-altar-gold bg-altar-gold/10" : "border-altar-teal bg-altar-teal/10";
+
+  return (
+    <article className={`border-l-2 px-2 py-1.5 text-left ${colour}`}>
+      <p className="text-[11px] font-semibold leading-4 text-altar-ink/80">{eventTime(gathering)}</p>
+      <p className="text-xs font-semibold leading-4 text-altar-ink">{gathering.title}</p>
+      {gathering.timeLabel ? <p className="text-[10px] leading-4 text-altar-sage">{gathering.timeLabel}</p> : null}
+    </article>
+  );
+}
+
+function MonthGrid({ month, gatheringsByDate }: { month: Date; gatheringsByDate: Map<string, PublicGathering[]> }) {
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
+  const gridStart = startOfWeek(firstDay);
+  const finalDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  const gridEnd = addDays(startOfWeek(finalDay), 6);
+  const cellCount = Math.round((gridEnd.getTime() - gridStart.getTime()) / 86_400_000) + 1;
+  const days = Array.from({ length: cellCount }, (_, index) => addDays(gridStart, index));
+
+  return (
+    <div className="overflow-x-auto">
+      <div className="min-w-[44rem]">
+        <div className="grid grid-cols-7 border-y border-altar-sage/30 bg-altar-stone/20">
+          {dayLabels.map((label) => <p className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.12em] text-altar-sage" key={label}>{label}</p>)}
+        </div>
+        <div className="grid grid-cols-7 border-l border-altar-sage/25">
+          {days.map((day) => {
+            const inCurrentMonth = day.getMonth() === month.getMonth();
+            const events = gatheringsByDate.get(dateKey(day)) ?? [];
+            return (
+              <section className={`min-h-36 border-b border-r border-altar-sage/25 p-2 ${inCurrentMonth ? "bg-white/40" : "bg-altar-stone/15"}`} key={dateKey(day)}>
+                <p className={`mb-2 text-sm font-semibold ${inCurrentMonth ? "text-altar-teal" : "text-altar-sage/70"}`}>{day.getDate()}</p>
+                <div className="space-y-1.5">
+                  {events.map((gathering) => <CalendarEvent gathering={gathering} key={gathering.id} />)}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WeekGrid({ weekStart, gatheringsByDate }: { weekStart: Date; gatheringsByDate: Map<string, PublicGathering[]> }) {
+  const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
+
+  return (
+    <div className="overflow-x-auto">
+      <div className="grid min-w-[52rem] grid-cols-7 border-l border-t border-altar-sage/25">
+        {days.map((day) => {
+          const events = gatheringsByDate.get(dateKey(day)) ?? [];
+          return (
+            <section className="min-h-[24rem] border-b border-r border-altar-sage/25 bg-white/40 p-3" key={dateKey(day)}>
+              <h2 className="border-b border-altar-sage/20 pb-3 text-sm font-semibold text-altar-teal">{formatDayLabel(day)}</h2>
+              {events.length > 0 ? (
+                <div className="mt-4 space-y-3">
+                  {events.map((gathering) => <CalendarEvent gathering={gathering} key={gathering.id} />)}
+                </div>
+              ) : <p className="mt-5 text-sm leading-6 text-altar-sage">No corporate gathering scheduled.</p>}
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** A visitor-safe calendar. Its data contract deliberately excludes volunteer availability. */
 export function PublicCalendar({ gatherings = mockPublicGatherings }: PublicCalendarProps) {
+  const firstGathering = gatherings[0];
+  const initialDate = firstGathering ? parseDateKey(gatheringDateKey(firstGathering)) : new Date();
   const [filter, setFilter] = useState<"all" | GatheringKind>("all");
+  const [view, setView] = useState<CalendarView>("month");
+  const [cursor, setCursor] = useState(() => new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
   const visibleGatherings = useMemo(
     () => gatherings.filter((gathering) => filter === "all" || gathering.kind === filter),
     [filter, gatherings],
   );
+  const gatheringsByDate = useMemo(() => {
+    const records = new Map<string, PublicGathering[]>();
+    visibleGatherings.forEach((gathering) => {
+      const key = gatheringDateKey(gathering);
+      records.set(key, [...(records.get(key) ?? []), gathering]);
+    });
+    return records;
+  }, [visibleGatherings]);
+  const weekStart = startOfWeek(cursor);
 
-  const gatheringsByDay = visibleGatherings.reduce<Record<string, PublicGathering[]>>((days, gathering) => {
-    const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Denver" }).format(new Date(gathering.startsAt));
-    days[date] ??= [];
-    days[date].push(gathering);
-    return days;
-  }, {});
+  const previous = () => setCursor((current) => view === "month" ? addMonths(current, -1) : addDays(current, -7));
+  const next = () => setCursor((current) => view === "month" ? addMonths(current, 1) : addDays(current, 7));
 
   return (
-    <main className="min-h-full bg-[#F5F1E8] px-6 py-14 text-[#1F2421] sm:px-10 lg:px-16">
-      <div className="mx-auto max-w-4xl">
+    <main className="min-h-full bg-altar-parchment px-6 py-14 text-altar-ink sm:px-10 lg:px-16">
+      <div className="mx-auto max-w-6xl">
         <header>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3F5F5B]">The Altar Initiative</p>
-          <h1 className="mt-4 font-serif text-4xl sm:text-5xl">Gatherings</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-[#1F2421]/80">Find public moments to gather in worship, Scripture, and prayer. More gatherings will be added as they are announced.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-altar-teal">The Altar Initiative</p>
+          <h1 className="mt-4 font-display text-4xl text-altar-teal sm:text-5xl">Gatherings</h1>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-altar-ink/80">Weekdays in October, gather for Morning and Evening Altar—worship-led moments of Scripture and prayer in the Lighthouse Prayer Room and online.</p>
         </header>
 
-        <fieldset className="mt-9 flex flex-wrap gap-2" aria-label="Filter gatherings">
-          <legend className="sr-only">Filter gatherings by type</legend>
-          {(["all", "morning", "evening", "special"] as const).map((option) => {
-            const isSelected = option === filter;
-            const label = option === "all" ? "All gatherings" : kindLabels[option];
-            return (
+        <div className="mt-9 flex flex-col gap-5 border-y border-altar-sage/30 py-5 lg:flex-row lg:items-center lg:justify-between">
+          <fieldset className="flex flex-wrap gap-2" aria-label="Filter gatherings">
+            <legend className="sr-only">Filter gatherings by type</legend>
+            {(["all", "morning", "evening"] as const).map((option) => {
+              const isSelected = option === filter;
+              const label = option === "all" ? "All gatherings" : kindLabels[option];
+              return (
+                <button
+                  aria-pressed={isSelected}
+                  className={`focus-ring rounded-full border px-4 py-2 text-sm font-semibold transition ${isSelected ? "border-altar-teal bg-altar-teal text-altar-parchment" : "border-altar-sage/45 bg-white/50 text-altar-ink hover:border-altar-teal"}`}
+                  key={option}
+                  onClick={() => setFilter(option)}
+                  type="button"
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </fieldset>
+
+          <div className="flex w-fit rounded-sm border border-altar-teal/50 bg-white/40 p-1" role="group" aria-label="Calendar view">
+            {(["month", "week"] as const).map((option) => (
               <button
-                aria-pressed={isSelected}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#3F5F5B] ${isSelected ? "border-[#3F5F5B] bg-[#3F5F5B] text-[#F5F1E8]" : "border-[#6F8580]/45 bg-white/50 text-[#1F2421] hover:border-[#3F5F5B]"}`}
+                aria-pressed={view === option}
+                className={`focus-ring rounded-sm px-3 py-2 text-sm font-semibold ${view === option ? "bg-altar-teal text-altar-parchment" : "text-altar-teal"}`}
                 key={option}
-                onClick={() => setFilter(option)}
+                onClick={() => setView(option)}
                 type="button"
               >
-                {label}
+                {option === "month" ? "Month" : "Week"}
               </button>
-            );
-          })}
-        </fieldset>
-
-        {Object.keys(gatheringsByDay).length > 0 ? (
-          <div className="mt-9 space-y-10">
-            {Object.entries(gatheringsByDay).map(([date, dayGatherings]) => (
-              <section aria-labelledby={`date-${date}`} key={date}>
-                <h2 className="border-b border-[#6F8580]/35 pb-3 font-serif text-2xl" id={`date-${date}`}>
-                  {formatDay(dayGatherings[0].startsAt)}
-                </h2>
-                <ul className="divide-y divide-[#6F8580]/20">
-                  {dayGatherings.map((gathering) => (
-                    <li className="grid gap-4 py-6 sm:grid-cols-[8rem_1fr]" key={gathering.id}>
-                      <p className="text-sm font-semibold text-[#3F5F5B]">{formatTime(gathering.startsAt)}–{formatTime(gathering.endsAt)}</p>
-                      <article>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6F8580]">{kindLabels[gathering.kind]}</p>
-                        <h3 className="mt-2 font-serif text-2xl">{gathering.title}</h3>
-                        <p className="mt-3 leading-7 text-[#1F2421]/80">{gathering.description}</p>
-                        <p className="mt-3 text-sm font-medium text-[#3F5F5B]">{gathering.locationLabel} · {gathering.locationType === "hybrid" ? "In person and online" : gathering.locationType === "online" ? "Online" : "In person"}</p>
-                        {gathering.meetingUrl ? <a className="mt-3 inline-block text-sm font-semibold underline decoration-[#B99A61] decoration-2 underline-offset-4 focus:outline-none focus:ring-2 focus:ring-[#3F5F5B]" href={gathering.meetingUrl}>Join online</a> : null}
-                      </article>
-                    </li>
-                  ))}
-                </ul>
-              </section>
             ))}
           </div>
-        ) : (
-          <p className="mt-10 border-l-2 border-[#B99A61] bg-white/40 p-5 leading-7">There are no gatherings in this view right now. Please check back soon.</p>
-        )}
+        </div>
+
+        <section className="mt-7" aria-labelledby="calendar-period">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <button aria-label={`Previous ${view}`} className="focus-ring rounded-sm border border-altar-teal px-3 py-2 text-sm font-semibold text-altar-teal hover:bg-white/60" onClick={previous} type="button">← Previous</button>
+            <h2 className="text-center font-display text-2xl text-altar-teal sm:text-3xl" id="calendar-period">{view === "month" ? formatCalendarHeading(cursor) : formatWeekHeading(weekStart)}</h2>
+            <button aria-label={`Next ${view}`} className="focus-ring rounded-sm border border-altar-teal px-3 py-2 text-sm font-semibold text-altar-teal hover:bg-white/60" onClick={next} type="button">Next →</button>
+          </div>
+
+          {view === "month" ? <MonthGrid gatheringsByDate={gatheringsByDate} month={cursor} /> : <WeekGrid gatheringsByDate={gatheringsByDate} weekStart={weekStart} />}
+        </section>
+
+        <aside className="mt-8 border-l-2 border-altar-gold bg-white/45 p-5 text-sm leading-6 text-altar-ink/75">
+          Morning Altar meets 6:30–7:30 AM. Evening Altar is announced for each weekday and its time will be added here once confirmed. Both gatherings are in person and online.
+        </aside>
       </div>
     </main>
   );

@@ -85,7 +85,7 @@ export function PrivateAccessBoundary({ children, requireCoordinator = false }: 
 
   if (access.kind === "loading") return <AccessLoadingState />;
   if (access.kind === "denied") {
-    return <PortalAccessDenied requestAccessLink={{ href: "/serve", label: "Share your interest" }} />;
+    return <PortalAccessDenied requestAccessLink={{ href: "/serve", label: "Share your interest" }} supportLink={{ href: "/access", label: "Sign in" }} />;
   }
 
   return <>{children(access.profile)}</>;

@@ -11,50 +11,42 @@ export const mockPrayerFocus: PrayerFocus = {
   resourceUrl: "#psalm-27",
 };
 
-export const mockPublicGatherings: PublicGathering[] = [
+const altarInitiativeWeekdays = Array.from({ length: 30 }, (_, index) => {
+  const day = String(index + 1).padStart(2, "0");
+  const date = `2026-10-${day}`;
+  const weekday = new Date(`${date}T12:00:00-06:00`).getDay();
+  return weekday > 0 && weekday < 6 ? date : null;
+}).filter((date): date is string => date !== null);
+
+const sharedGatheringDetails = {
+  locationType: "hybrid" as const,
+  locationLabel: "Lighthouse Prayer Room",
+  description:
+    "Worship, thanksgiving, Scripture, and intercession as we consecrate the bookends of the day together.",
+};
+
+/**
+ * Representative public data from the Altar Initiative handout. In production,
+ * these records will come from the public-events projection in Supabase.
+ */
+export const mockPublicGatherings: PublicGathering[] = altarInitiativeWeekdays.flatMap((date) => [
   {
-    id: "morning-altar-oct-5",
-    kind: "morning",
+    id: `morning-altar-${date}`,
+    kind: "morning" as const,
     title: "Morning Altar",
-    startsAt: "2026-10-05T07:00:00-06:00",
-    endsAt: "2026-10-05T08:00:00-06:00",
-    locationType: "in_person",
-    locationLabel: "Prayer Room · Main Campus",
-    description:
-      "Begin the day with Scripture, worship, and prayer for our church and region.",
+    startsAt: `${date}T06:30:00-06:00`,
+    endsAt: `${date}T07:30:00-06:00`,
+    ...sharedGatheringDetails,
   },
   {
-    id: "evening-altar-oct-7",
-    kind: "evening",
+    id: `evening-altar-${date}`,
+    kind: "evening" as const,
     title: "Evening Altar",
-    startsAt: "2026-10-07T18:30:00-06:00",
-    endsAt: "2026-10-07T20:00:00-06:00",
-    locationType: "in_person",
-    locationLabel: "Prayer Room · Main Campus",
-    description:
-      "Gather in worship and make space to seek the presence of Jesus together.",
+    // A stable sort value only. The public interface preserves the handout's
+    // stated "time TBD" rather than presenting this placeholder as a time.
+    startsAt: `${date}T19:00:00-06:00`,
+    endsAt: `${date}T20:00:00-06:00`,
+    timeLabel: "Time to be announced",
+    ...sharedGatheringDetails,
   },
-  {
-    id: "worship-night-oct-10",
-    kind: "special",
-    title: "A Night of Worship & Prayer",
-    startsAt: "2026-10-10T19:00:00-06:00",
-    endsAt: "2026-10-10T21:00:00-06:00",
-    locationType: "hybrid",
-    locationLabel: "Sanctuary · Main Campus",
-    description:
-      "An extended evening of worship, Scripture, and prayer for awakening in our region.",
-    meetingUrl: "#watch-online",
-  },
-  {
-    id: "morning-altar-oct-12",
-    kind: "morning",
-    title: "Morning Altar",
-    startsAt: "2026-10-12T07:00:00-06:00",
-    endsAt: "2026-10-12T08:00:00-06:00",
-    locationType: "in_person",
-    locationLabel: "Prayer Room · Main Campus",
-    description:
-      "Begin the day with Scripture, worship, and prayer for our church and region.",
-  },
-];
+]);

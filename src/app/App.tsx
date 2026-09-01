@@ -10,10 +10,11 @@ import {
   UpdatesSignup,
   type UpdatesSignupValues,
 } from '../features/public'
-import { PrivateAccessBoundary } from '../features/access'
+import { InvitationSignIn, PrivateAccessBoundary } from '../features/access'
 import { CoordinatorWorkspace, VolunteerSchedule } from '../features/private-workspace'
 import {
   getSupabaseBrowserClient,
+  requestInvitationMagicLink,
   submitServeInterest,
   subscribeToUpdates,
 } from '../lib/supabase'
@@ -47,6 +48,18 @@ function CoordinatorRoute() {
   )
 }
 
+function AccessRoute() {
+  const requestMagicLink = async (email: string) => {
+    await requestInvitationMagicLink(
+      getSupabaseBrowserClient(),
+      email,
+      `${window.location.origin}/portal`,
+    )
+  }
+
+  return <InvitationSignIn onRequestMagicLink={requestMagicLink} />
+}
+
 export function App() {
   const submitInterest = async (values: ServeInterestValues) => {
     await submitServeInterest(getSupabaseBrowserClient(), {
@@ -71,6 +84,7 @@ export function App() {
         <Route path="calendar" element={<PublicCalendar />} />
         <Route path="serve" element={<ServeInterestForm onSubmitInterest={submitInterest} />} />
         <Route path="updates" element={<UpdatesSignup onSubscribe={subscribe} />} />
+        <Route path="access" element={<AccessRoute />} />
         <Route path="portal/*" element={<VolunteerPortalRoute />} />
         <Route path="coordinator/*" element={<CoordinatorRoute />} />
         <Route path="*" element={<PlaceholderPage />} />

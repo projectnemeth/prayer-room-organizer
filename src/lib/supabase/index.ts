@@ -1,4 +1,5 @@
 export { createSupabaseBrowserClient, getSupabaseBrowserClient } from "./client";
+export { requestInvitationMagicLink } from './auth'
 export {
   getSupabaseBrowserConfig,
   hasSupabaseBrowserConfig,

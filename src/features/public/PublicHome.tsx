@@ -13,14 +13,20 @@ const kindLabel = {
   special: "Special gathering",
 };
 
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
+function formatDateTime(gathering: PublicGathering) {
+  const date = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
+  }).format(new Date(gathering.startsAt));
+
+  if (gathering.timeLabel) return `${date} · ${gathering.timeLabel}`;
+
+  const time = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(value));
+  }).format(new Date(gathering.startsAt));
+  return `${date}, ${time}`;
 }
 
 /** Public landing content. It contains no volunteer, room-operation, or availability data. */
@@ -140,7 +146,7 @@ export function PublicHome({
           <ul className="mt-7 divide-y divide-[#6F8580]/25 border-y border-[#6F8580]/25">
             {upcoming.map((gathering) => (
               <li key={gathering.id} className="grid gap-2 py-5 md:grid-cols-[10rem_1fr_auto] md:items-center">
-                <p className="text-sm font-semibold text-[#3F5F5B]">{formatDateTime(gathering.startsAt)}</p>
+                <p className="text-sm font-semibold text-[#3F5F5B]">{formatDateTime(gathering)}</p>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#6F8580]">{kindLabel[gathering.kind]}</p>
                   <h3 className="mt-1 font-serif text-xl">{gathering.title}</h3>
