@@ -1080,6 +1080,14 @@ revoke all on function public.claim_open_shift(uuid) from public, anon;
 revoke all on function public.subscribe_to_updates(text, text) from public;
 revoke all on function public.claim_due_message_jobs(integer, uuid) from public, anon, authenticated;
 revoke all on function public.complete_message_job(uuid, uuid, public.message_status, text, text) from public, anon, authenticated;
+-- Trigger helpers are invoked by Postgres, not through the Data API. PostgreSQL
+-- grants EXECUTE to PUBLIC by default, so remove that inherited capability.
+revoke all on function public.handle_new_auth_user() from public, anon, authenticated;
+revoke all on function public.sync_profile_email_from_auth() from public, anon, authenticated;
+revoke all on function public.create_profile_email_preferences() from public, anon, authenticated;
+revoke all on function public.sync_profile_email_preferences() from public, anon, authenticated;
+revoke all on function public.enqueue_assignment_reminders() from public, anon, authenticated;
+revoke all on function public.write_audit_row() from public, anon, authenticated;
 grant execute on function public.current_profile_role() to authenticated;
 grant execute on function public.current_profile_status() to authenticated;
 grant execute on function public.is_active_volunteer() to authenticated;
