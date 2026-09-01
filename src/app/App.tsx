@@ -1,4 +1,4 @@
-import { Route, Routes, useNavigate } from 'react-router-dom'
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { AppShell } from './AppShell'
 import { PlaceholderPage } from './PlaceholderPage'
 import {
@@ -41,9 +41,15 @@ function VolunteerPortalRoute() {
 }
 
 function CoordinatorRoute() {
+  const { pathname } = useLocation()
+  const initialView = pathname.endsWith('/interests') ? 'interests'
+    : pathname.endsWith('/schedule') ? 'schedule'
+      : pathname.endsWith('/people') ? 'people'
+        : 'overview'
+
   return (
     <PrivateAccessBoundary requireCoordinator>
-      {(profile) => <CoordinatorWorkspace currentProfileId={profile.id} currentRole={profile.role === 'admin' ? 'admin' : 'coordinator'} />}
+      {(profile) => <CoordinatorWorkspace currentProfileId={profile.id} currentRole={profile.role === 'admin' ? 'admin' : 'coordinator'} initialView={initialView} key={`${profile.id}-${initialView}`} />}
     </PrivateAccessBoundary>
   )
 }

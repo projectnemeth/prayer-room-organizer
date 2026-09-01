@@ -132,6 +132,7 @@ function buildDays(shifts: ShiftRow[], assignments: AssignmentRow[]) {
 interface CoordinatorWorkspaceProps {
   currentProfileId: string
   currentRole: 'coordinator' | 'admin'
+  initialView?: CoordinatorView
 }
 
 function AdminPeopleManager({ currentProfileId, profiles, onPromote }: { currentProfileId: string; profiles: AdminProfileRow[]; onPromote: (profileId: string) => void }) {
@@ -160,8 +161,8 @@ function AdminPeopleManager({ currentProfileId, profiles, onPromote }: { current
   )
 }
 
-export function CoordinatorWorkspace({ currentProfileId, currentRole }: CoordinatorWorkspaceProps) {
-  const [view, setView] = useState<CoordinatorView>('overview')
+export function CoordinatorWorkspace({ currentProfileId, currentRole, initialView = 'overview' }: CoordinatorWorkspaceProps) {
+  const [view, setView] = useState<CoordinatorView>(initialView)
   const [state, setState] = useState<CoordinatorState>(emptyState)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

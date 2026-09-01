@@ -12,5 +12,7 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'A daily rhythm of prayer.' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'View gatherings' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/coordinator')
   })
 })
