@@ -2,21 +2,21 @@
 
 ## Delivery objective
 
-Launch a reliable MVP for the October Altar Initiative with a public daily-rhythm experience and a private, invitation-only volunteer coordination portal. The launch is successful when coordinators can create and cover worship-led gatherings, approved volunteers receive timely reminders, and public visitors can discover gatherings or explore serving without gaining access to internal scheduling.
+Launch a reliable MVP for the October Altar Initiative with a public daily-rhythm experience and a private, invitation-only volunteer coordination portal. The launch is successful when coordinators can create and cover worship-led gatherings, approved volunteers receive timely email reminders, and public visitors can discover gatherings or explore serving without gaining access to internal scheduling.
 
 ## Locked decisions
 
-- **Framework:** Next.js App Router + TypeScript. Server Components handle reads; Server Actions handle authenticated form mutations; Route Handlers receive webhooks and health/cron requests. Every mutation verifies role and authorization on the server. [Next.js App Router](https://nextjs.org/docs/app), [Server Functions security guidance](https://nextjs.org/docs/app/getting-started/mutating-data)
-- **Data and access:** Supabase Postgres + invitation-only Supabase Auth. Row-level security is enabled on every application table; public read access exists only for explicitly published events and public prayer focuses. [Supabase Next.js guide](https://supabase.com/docs/guides/getting-started/quickstarts/nextjs)
+- **Framework and hosting:** React + TypeScript built with Vite, deployed as static assets on the existing shared host. A standard subdomain or host path serves the application; no Vercel subscription is required. Browser requests use Supabase’s public client only.
+- **Data and access:** Supabase Postgres + invitation-only Supabase Auth. Row-level security is enabled on every application table; public read access exists only for explicitly published events and public prayer focuses. [Supabase guide](https://supabase.com/docs/guides/getting-started)
 - **Reminders:** Supabase Cron invokes a Supabase Edge Function that claims due jobs from `message_jobs`. This supports frequent scheduling and a durable delivery log; Vercel Cron remains unsuitable as the reminder engine because its cadence depends on hosting plan. [Supabase Cron](https://supabase.com/docs/guides/cron)
-- **Delivery providers:** Resend for email and Twilio Messaging Service for SMS, behind `EmailProvider` and `SmsProvider` interfaces. Twilio opt-out webhooks update local preferences; initial SMS messages identify the sender and include STOP instructions. [Resend idempotency](https://resend.com/docs/api-reference/emails/send-email), [Twilio messaging policy](https://www.twilio.com/en-us/legal/messaging-policy)
+- **Delivery provider:** Resend for email, behind a small `EmailProvider` interface. SMS is not part of the MVP; it requires its own opt-in, compliance, webhook, and operating design, so it is a deliberate post-pilot decision. [Resend idempotency](https://resend.com/docs/api-reference/emails/send-email)
 - **No prayer-request feature:** no prayer request entities, free-form pastoral notes, or prayer-request search will be introduced.
 
 ## Milestones
 
 ### 0. Foundation and design system
 
-**Deliver:** Next.js repository, Tailwind setup, application shell, environment validation, database migration workflow, Supabase clients, and an accessible Altar Initiative visual system.
+**Deliver:** Vite React repository, Tailwind setup, application shell, environment validation, database migration workflow, Supabase clients, shared-host deployment configuration, and an accessible Altar Initiative visual system.
 
 **Done when:**
 
@@ -33,7 +33,7 @@ Launch a reliable MVP for the October Altar Initiative with a public daily-rhyth
 
 - A visitor can see only published events and public prayer focuses.
 - Morning Altar, noon prayer moment, Evening Altar, and special gatherings communicate clearly whether participation is in person, online, or personal.
-- Updates signup records separate email and SMS consent, consent source, and timestamp.
+- Updates signup records email consent, consent source, timestamp, and unsubscribe state.
 - The serve-interest form asks about availability, anticipated participation, and desired ways to serve; it does not show a shift roster.
 - Server-side validation, rate limiting, and basic spam protection protect public forms.
 
@@ -61,13 +61,12 @@ Launch a reliable MVP for the October Altar Initiative with a public daily-rhyth
 
 ### 4. Messaging and reminder operations
 
-**Deliver:** message templates, queue, email/SMS adapters, scheduled job runner, opt-out webhooks, and delivery history.
+**Deliver:** email templates, queue, email adapter, scheduled job runner, unsubscribe handling, and delivery history.
 
 **Done when:**
 
 - Assignment confirmation, seven-day reminder, 24-hour reminder, and unconfirmed-shift escalation are queued exactly once per assignment event.
 - A retry cannot send a duplicate message; job claiming and provider idempotency are tested.
-- SMS is sent only with documented opt-in; STOP/START events synchronize before the next send.
 - Coordinators can see delivery outcome and resend only through a deliberate, audited action.
 - No credentials, full message bodies, or phone numbers appear in application logs.
 
@@ -133,7 +132,6 @@ tests/
 - Confirm the church’s public privacy notice, consent wording, sender identity, and SMS keyword language.
 - Verify all public content is intentional and no volunteer data appears in page source or API responses.
 - Set a branded sending domain and reply-to address for email.
-- Configure Twilio Messaging Service, opt-out/help behavior, and inbound webhook signature verification.
 - Test reminders in the church timezone across daylight-saving transitions.
 - Invite coordinators, train them on approval and absence workflows, and publish a one-page operating guide.
 - Run a small pilot week before broader rollout.

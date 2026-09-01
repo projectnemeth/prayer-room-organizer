@@ -21,4 +21,4 @@ This product is the private coordination hub for the Prayer Room, paired with a 
 
 ## Proposed stack
 
-Next.js + TypeScript, PostgreSQL/Supabase, Supabase Auth, Resend for email, Twilio for SMS, and Vercel for hosting.
+React + TypeScript built as static files on the existing shared host; Supabase for database, authentication, authorization, scheduled jobs, and secure functions; Resend for email reminders. SMS is a post-pilot addition only if email reminders prove insufficient.
