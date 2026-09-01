@@ -10,7 +10,8 @@ import {
   UpdatesSignup,
   type UpdatesSignupValues,
 } from '../features/public'
-import { PortalAccessDenied } from '../features/portal'
+import { PrivateAccessBoundary } from '../features/access'
+import { CoordinatorWorkspace, VolunteerSchedule } from '../features/private-workspace'
 import {
   getSupabaseBrowserClient,
   submitServeInterest,
@@ -28,6 +29,22 @@ function PublicHomeRoute() {
   const navigate = useNavigate()
 
   return <PublicHome onNavigate={(destination) => navigate(publicPaths[destination])} />
+}
+
+function VolunteerPortalRoute() {
+  return (
+    <PrivateAccessBoundary>
+      {(profile) => <VolunteerSchedule volunteerName={profile.displayName} />}
+    </PrivateAccessBoundary>
+  )
+}
+
+function CoordinatorRoute() {
+  return (
+    <PrivateAccessBoundary requireCoordinator>
+      {() => <CoordinatorWorkspace />}
+    </PrivateAccessBoundary>
+  )
 }
 
 export function App() {
@@ -54,10 +71,8 @@ export function App() {
         <Route path="calendar" element={<PublicCalendar />} />
         <Route path="serve" element={<ServeInterestForm onSubmitInterest={submitInterest} />} />
         <Route path="updates" element={<UpdatesSignup onSubscribe={subscribe} />} />
-        <Route
-          path="portal/*"
-          element={<PortalAccessDenied requestAccessLink={{ href: '/serve', label: 'Share your interest' }} />}
-        />
+        <Route path="portal/*" element={<VolunteerPortalRoute />} />
+        <Route path="coordinator/*" element={<CoordinatorRoute />} />
         <Route path="*" element={<PlaceholderPage />} />
       </Routes>
     </AppShell>
