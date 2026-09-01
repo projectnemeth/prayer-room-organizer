@@ -15,6 +15,7 @@ This product is the private coordination hub for the Prayer Room, paired with a 
 
 - [Product brief](docs/product-brief.md)
 - [Architecture](docs/architecture.md)
+- [Development plan](docs/development-plan.md)
 - [Decisions](docs/decisions.md)
 - [Brand direction](docs/brand-direction.md)
 

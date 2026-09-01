@@ -11,11 +11,11 @@
 | Authorization | Application roles plus PostgreSQL row-level security | Enforces the public / volunteer / coordinator boundary at both layers. |
 | Email | Resend | Transactional confirmations and scheduled reminders. |
 | SMS | Twilio | Opt-in shift reminders and time-sensitive coverage outreach. |
-| Background work | Vercel Cron + a durable job table | Sends reminders predictably and records every attempted delivery. |
+| Background work | Supabase Cron + Edge Function + durable job table | Delivers time-sensitive reminders without relying on a hosting-plan cron cadence. |
 | Hosting | Vercel | Straightforward Next.js deployment, previews, and cron support. |
 | Observability | Sentry | Error reporting without logging sensitive operational notes. |
 
-Provider adapters should isolate email and SMS integrations so either provider can be replaced later.
+Provider adapters should isolate email and SMS integrations so either provider can be replaced later. Supabase Cron selects due message jobs and invokes an Edge Function; the function claims each job atomically, calls the provider adapter, and records the outcome. This avoids the timing and retry limitations of a host-level cron endpoint.
 
 ## Application areas
 
@@ -73,9 +73,10 @@ Keep message content limited to scheduling and initiative communications. Do not
 
 - Record explicit email and SMS consent separately.
 - Send SMS only to volunteers who have actively opted in; include compliant opt-out language.
-- Use a job record with idempotency keys before attempting delivery, so cron retries cannot duplicate reminders.
+- Use a job record with idempotency keys before attempting delivery, so scheduler retries cannot duplicate reminders. Resend accepts an idempotency key for email sends.
 - Store provider IDs and delivery status, not more message content than operationally necessary.
 - Send reminders according to configurable templates: assignment confirmation, one-week reminder, 24-hour reminder, unconfirmed shift alert, and coverage request.
+- Process provider webhooks to keep SMS opt-out status synchronized; never queue SMS for an opted-out number.
 
 ## Build sequence
 
