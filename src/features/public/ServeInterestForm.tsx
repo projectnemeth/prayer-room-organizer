@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { ServeInterestValues } from "./types";
 
 interface ServeInterestFormProps {
-  onSubmitInterest?: (values: ServeInterestValues) => void;
+  onSubmitInterest?: (values: ServeInterestValues) => Promise<void>;
 }
 
 const availabilityOptions = ["Mornings", "Midday", "Evenings", "Weekdays", "Weekends"];
@@ -12,7 +12,6 @@ const initialValues: ServeInterestValues = {
   name: "",
   email: "",
   phone: "",
-  preferredContact: "email",
   availability: [],
   servingInterests: [],
   note: "",
@@ -29,11 +28,22 @@ function toggleValue(values: string[], value: string) {
 export function ServeInterestForm({ onSubmitInterest }: ServeInterestFormProps) {
   const [values, setValues] = useState<ServeInterestValues>(initialValues);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSubmitInterest?.(values);
-    setSubmitted(true);
+    setError(undefined);
+    setIsSubmitting(true);
+
+    try {
+      await onSubmitInterest?.(values);
+      setSubmitted(true);
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : "We could not send your interest right now. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (submitted) {
@@ -69,16 +79,10 @@ export function ServeInterestForm({ onSubmitInterest }: ServeInterestFormProps) 
               <span className="text-sm font-semibold">Email <span aria-hidden="true">*</span></span>
               <input autoComplete="email" className="mt-2 block w-full rounded-sm border border-[#6F8580]/55 bg-white px-3 py-2.5 focus:border-[#3F5F5B] focus:outline-none focus:ring-2 focus:ring-[#3F5F5B]/25" onChange={(event) => setValues({ ...values, email: event.target.value })} required type="email" value={values.email} />
             </label>
-            <label>
-              <span className="text-sm font-semibold">Phone <span className="font-normal text-[#1F2421]/65">(optional)</span></span>
+            <label className="sm:col-span-2">
+              <span className="text-sm font-semibold">Phone <span className="font-normal text-[#1F2421]/65">(optional — include country code, e.g. +13035550123)</span></span>
               <input autoComplete="tel" className="mt-2 block w-full rounded-sm border border-[#6F8580]/55 bg-white px-3 py-2.5 focus:border-[#3F5F5B] focus:outline-none focus:ring-2 focus:ring-[#3F5F5B]/25" onChange={(event) => setValues({ ...values, phone: event.target.value })} type="tel" value={values.phone} />
             </label>
-            <fieldset>
-              <legend className="text-sm font-semibold">Best way to contact you</legend>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                {(["email", "phone", "either"] as const).map((option) => <label className="flex items-center gap-2" key={option}><input checked={values.preferredContact === option} name="contact" onChange={() => setValues({ ...values, preferredContact: option })} type="radio" value={option} />{option === "either" ? "Either" : option[0].toUpperCase() + option.slice(1)}</label>)}
-              </div>
-            </fieldset>
           </div>
 
           <fieldset className="mt-7">
@@ -99,7 +103,8 @@ export function ServeInterestForm({ onSubmitInterest }: ServeInterestFormProps) 
             <span className="text-sm font-semibold">Anything else you&apos;d like us to know? <span className="font-normal text-[#1F2421]/65">(optional)</span></span>
             <textarea className="mt-2 block min-h-28 w-full rounded-sm border border-[#6F8580]/55 bg-white px-3 py-2.5 focus:border-[#3F5F5B] focus:outline-none focus:ring-2 focus:ring-[#3F5F5B]/25" onChange={(event) => setValues({ ...values, note: event.target.value })} value={values.note} />
           </label>
-          <button className="mt-7 rounded-sm bg-[#3F5F5B] px-5 py-3 text-sm font-semibold text-[#F5F1E8] transition hover:bg-[#2e4945] focus:outline-none focus:ring-2 focus:ring-[#3F5F5B] focus:ring-offset-2" type="submit">Send interest</button>
+          {error ? <p aria-live="polite" className="mt-5 text-sm text-[#9A3412]">{error}</p> : null}
+          <button className="mt-7 rounded-sm bg-[#3F5F5B] px-5 py-3 text-sm font-semibold text-[#F5F1E8] transition hover:bg-[#2e4945] focus:outline-none focus:ring-2 focus:ring-[#3F5F5B] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70" disabled={isSubmitting} type="submit">{isSubmitting ? "Sending…" : "Send interest"}</button>
         </form>
       </div>
     </main>

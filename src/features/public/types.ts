@@ -27,13 +27,11 @@ export interface ServeInterestValues {
   name: string;
   email: string;
   phone: string;
-  preferredContact: "email" | "phone" | "either";
   availability: string[];
   servingInterests: string[];
   note: string;
 }
 
 export interface UpdatesSignupValues {
-  name: string;
   email: string;
 }
