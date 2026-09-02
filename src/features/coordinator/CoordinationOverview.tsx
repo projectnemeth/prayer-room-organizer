@@ -24,7 +24,15 @@ function Metric({ label, value, detail }: { label: string; value: number; detail
  * authenticated route; it has no client, database, or authorization behavior
  * of its own.
  */
-export function CoordinationOverview({ data = emptyOverview, isLoading = false, onOpenSchedule, onReviewInterests }: CoordinationOverviewProps) {
+export function CoordinationOverview({
+  data = emptyOverview,
+  isLoading = false,
+  onOpenSchedule,
+  onReviewInterests,
+  onPreviousPeriod,
+  onNextPeriod,
+  onToday,
+}: CoordinationOverviewProps) {
   if (isLoading) {
     return (
       <section aria-busy="true" aria-labelledby="coordination-overview-heading" className="bg-altar-parchment p-6 sm:p-8">
@@ -46,7 +54,43 @@ export function CoordinationOverview({ data = emptyOverview, isLoading = false, 
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Coordinator workspace</p>
           <h2 id="coordination-overview-heading" className="mt-3 font-display text-3xl text-altar-ink">Coordination overview</h2>
-          <p className="mt-2 text-sm font-semibold text-altar-sage">{data.periodLabel}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <p className="text-sm font-semibold text-altar-sage">{data.periodLabel}</p>
+            {(onPreviousPeriod || onNextPeriod) ? (
+              <div className="flex items-center gap-1.5" role="group" aria-label="Date range navigation">
+                {onPreviousPeriod ? (
+                  <button
+                    aria-label="Previous 7 days"
+                    className="focus-ring rounded-sm border border-altar-teal/60 bg-white/60 px-2.5 py-1 text-xs font-semibold text-altar-teal transition-colors hover:bg-altar-stone/45"
+                    onClick={onPreviousPeriod}
+                    type="button"
+                  >
+                    ← Prev
+                  </button>
+                ) : null}
+                {onToday ? (
+                  <button
+                    aria-label="Current 7 days"
+                    className="focus-ring rounded-sm border border-altar-teal/60 bg-white/60 px-2.5 py-1 text-xs font-semibold text-altar-teal transition-colors hover:bg-altar-stone/45"
+                    onClick={onToday}
+                    type="button"
+                  >
+                    Today
+                  </button>
+                ) : null}
+                {onNextPeriod ? (
+                  <button
+                    aria-label="Next 7 days"
+                    className="focus-ring rounded-sm border border-altar-teal/60 bg-white/60 px-2.5 py-1 text-xs font-semibold text-altar-teal transition-colors hover:bg-altar-stone/45"
+                    onClick={onNextPeriod}
+                    type="button"
+                  >
+                    Next →
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
           {data.prayerFocusTitle ? <p className="mt-3 max-w-2xl text-sm leading-6 text-altar-ink/75">Current focus: <span className="font-semibold text-altar-ink">{data.prayerFocusTitle}</span></p> : null}
         </div>
         {(onOpenSchedule || onReviewInterests) ? (

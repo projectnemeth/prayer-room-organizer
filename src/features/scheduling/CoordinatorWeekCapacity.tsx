@@ -24,6 +24,9 @@ export function CoordinatorWeekCapacity({
   days,
   onSelectSlot,
   onCreateShift,
+  onPreviousWeek,
+  onNextWeek,
+  onToday,
 }: CoordinatorWeekCapacityProps) {
   const scheduledSlots = days.flatMap((day) => day.slots).filter((slot) => slot.status !== "cancelled");
   const capacity = scheduledSlots.reduce((total, slot) => total + slot.capacity, 0);
@@ -37,7 +40,43 @@ export function CoordinatorWeekCapacity({
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-altar-teal">The Altar Initiative · Coordinator</p>
             <h1 className="mt-3 font-display text-4xl leading-tight text-altar-teal sm:text-5xl">Weekly coverage</h1>
-            <p className="mt-3 text-base text-altar-ink/75">{weekLabel} · America/Denver</p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <p className="text-base text-altar-ink/75">{weekLabel} · America/Denver</p>
+              {(onPreviousWeek || onNextWeek) ? (
+                <div className="flex items-center gap-1.5" role="group" aria-label="Week navigation">
+                  {onPreviousWeek ? (
+                    <button
+                      aria-label="Previous week"
+                      className="focus-ring rounded-sm border border-altar-teal/60 bg-white/60 px-2.5 py-1 text-xs font-semibold text-altar-teal transition-colors hover:bg-altar-stone/45"
+                      onClick={onPreviousWeek}
+                      type="button"
+                    >
+                      ← Prev
+                    </button>
+                  ) : null}
+                  {onToday ? (
+                    <button
+                      aria-label="Current week"
+                      className="focus-ring rounded-sm border border-altar-teal/60 bg-white/60 px-2.5 py-1 text-xs font-semibold text-altar-teal transition-colors hover:bg-altar-stone/45"
+                      onClick={onToday}
+                      type="button"
+                    >
+                      Today
+                    </button>
+                  ) : null}
+                  {onNextWeek ? (
+                    <button
+                      aria-label="Next week"
+                      className="focus-ring rounded-sm border border-altar-teal/60 bg-white/60 px-2.5 py-1 text-xs font-semibold text-altar-teal transition-colors hover:bg-altar-stone/45"
+                      onClick={onNextWeek}
+                      type="button"
+                    >
+                      Next →
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           </div>
           {onCreateShift ? (
             <button className="button-primary" onClick={onCreateShift} type="button">

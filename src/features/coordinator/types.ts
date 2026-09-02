@@ -58,4 +58,7 @@ export interface CoordinationOverviewProps {
   isLoading?: boolean;
   onOpenSchedule?: () => void;
   onReviewInterests?: () => void;
+  onPreviousPeriod?: () => void;
+  onNextPeriod?: () => void;
+  onToday?: () => void;
 }

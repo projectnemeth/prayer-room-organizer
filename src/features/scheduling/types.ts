@@ -1,4 +1,32 @@
 /**
+ * Coordinator-assigned roles a volunteer fills within a single prayer-set shift.
+ * One person may hold multiple roles in the same assignment.
+ */
+export type ShiftRole =
+  | "prayer_leader"
+  | "worship_leader"
+  | "worship_team_member"
+  | "host"
+  | "tech_director";
+
+export const SHIFT_ROLE_LABELS: Record<ShiftRole, string> = {
+  prayer_leader: "Prayer Leader",
+  worship_leader: "Worship Leader",
+  worship_team_member: "Worship Team Member",
+  host: "Host",
+  tech_director: "Tech Director",
+};
+
+/** All five roles in a consistent display order. */
+export const SHIFT_ROLE_OPTIONS: ShiftRole[] = [
+  "prayer_leader",
+  "worship_leader",
+  "worship_team_member",
+  "host",
+  "tech_director",
+];
+
+/**
  * Deliberately contains counts rather than people. Coordinator coverage can be
  * understood at a glance without turning the schedule into a volunteer roster.
  */
@@ -24,6 +52,9 @@ export interface CoordinatorWeekCapacityProps {
   days: CapacityDay[];
   onSelectSlot?: (slot: CapacitySlot) => void;
   onCreateShift?: () => void;
+  onPreviousWeek?: () => void;
+  onNextWeek?: () => void;
+  onToday?: () => void;
 }
 
 export interface AvailableVolunteerSlot {
@@ -52,6 +83,8 @@ export interface VolunteerAssignment {
   locationLabel?: string;
   instructions?: string;
   status: "assigned" | "confirmed" | "absence_requested";
+  /** Coordinator-assigned roles for this specific prayer set. Empty array means no role designated yet. */
+  roles?: ShiftRole[];
 }
 
 export interface VolunteerAssignmentsProps {
