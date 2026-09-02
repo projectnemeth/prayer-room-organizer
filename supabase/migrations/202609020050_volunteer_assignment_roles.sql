@@ -123,6 +123,8 @@ $$;
 -- list_my_shift_assignments — extended with roles
 -- Supersedes the previous version so volunteers see their per-set roles.
 -- ---------------------------------------------------------------------------
+drop function if exists public.list_my_shift_assignments(integer);
+
 create or replace function public.list_my_shift_assignments(p_limit integer default 50)
 returns table (
   assignment_id      uuid,
