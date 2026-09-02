@@ -142,6 +142,28 @@ export async function inviteVolunteerFromInterest(
   return result as VolunteerInvitationResult
 }
 
+export async function inviteVolunteer(
+  client: SupabaseClient,
+  values: { name: string; email: string },
+): Promise<VolunteerInvitationResult> {
+  const { data, error } = await client.functions.invoke('invite-volunteer', {
+    body: { name: values.name, email: values.email },
+  })
+  if (error) {
+    let payload: unknown
+    const context = 'context' in error ? error.context : undefined
+    if (context instanceof Response) {
+      try { payload = await context.clone().json() } catch { /* use safe fallback */ }
+    }
+    throw messageForInvitationError(payload)
+  }
+  const result = data as Partial<VolunteerInvitationResult> | null
+  if (!result || (result.outcome !== 'invitation-sent' && result.outcome !== 'access-activated') || typeof result.email !== 'string') {
+    throw new VolunteerInvitationError('invalid-invitation-response', 'The invitation service returned an unexpected response. Please try again.')
+  }
+  return result as VolunteerInvitationResult
+}
+
 /** Ends the local Supabase session before returning to the invitation-only entry point. */
 export async function signOutPrivateSession(client: SupabaseClient): Promise<void> {
   const { error } = await client.auth.signOut()

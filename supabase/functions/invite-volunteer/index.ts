@@ -40,13 +40,15 @@ Deno.serve(async (request) => {
   if (!supabaseUrl || !anonKey || !serviceRoleKey) return respond({ code: "server-misconfigured" }, 500);
   if (!authorization?.startsWith("Bearer ")) return respond({ code: "unauthorized" }, 401);
 
-  let body: { interestId?: unknown };
+  let body: { interestId?: unknown; name?: unknown; email?: unknown };
   try {
     body = await request.json();
   } catch {
     return respond({ code: "invalid-request" }, 400);
   }
-  if (!isUuid(body.interestId)) return respond({ code: "invalid-request" }, 400);
+  const directInvite = body.interestId === undefined;
+  if (!directInvite && !isUuid(body.interestId)) return respond({ code: "invalid-request" }, 400);
+  if (directInvite && (typeof body.name !== "string" || body.name.trim().length < 2 || body.name.trim().length > 160 || typeof body.email !== "string" || !/^\S+@\S+\.\S+$/.test(body.email.trim()))) return respond({ code: "invalid-request" }, 400);
 
   const callerClient = createClient(supabaseUrl, anonKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -74,15 +76,16 @@ Deno.serve(async (request) => {
     return respond({ code: "forbidden" }, 403);
   }
 
-  const { data: interest, error: interestError } = await adminClient
-    .from("interest_submissions")
-    .select("id, name, email, status")
-    .eq("id", body.interestId)
-    .maybeSingle();
-  if (interestError || !interest) return respond({ code: "interest-not-found" }, 404);
-  if (interest.status !== "submitted" && interest.status !== "reviewing") return respond({ code: "interest-not-ready" }, 409);
+  let interest: { id: string; name: string; email: string; status: string } | null = null;
+  if (!directInvite) {
+    const result = await adminClient.from("interest_submissions").select("id, name, email, status").eq("id", body.interestId).maybeSingle();
+    interest = result.data;
+    if (result.error || !interest) return respond({ code: "interest-not-found" }, 404);
+    if (interest.status !== "submitted" && interest.status !== "reviewing") return respond({ code: "interest-not-ready" }, 409);
+  }
 
-  const email = interest.email.trim().toLowerCase();
+  const email = (directInvite ? body.email as string : interest!.email).trim().toLowerCase();
+  const name = (directInvite ? body.name as string : interest!.name).trim();
   const { data: existingProfile, error: profileLookupError } = await adminClient
     .from("profiles")
     .select("id, role, status")
@@ -90,6 +93,7 @@ Deno.serve(async (request) => {
     .maybeSingle();
   if (profileLookupError) return respond({ code: "profile-activation-failed" }, 500);
 
+  if (existingProfile && directInvite) return respond({ code: "auth-account-exists" }, 409);
   if (existingProfile) {
     const profileUpdate: Record<string, unknown> = {
       status: "active",
@@ -122,7 +126,7 @@ Deno.serve(async (request) => {
   if (!requestOrigin || !allowedOrigins.has(requestOrigin)) return respond({ code: "invalid-request" }, 400);
   const redirectTo = `${requestOrigin}/portal`;
   const { data: invitation, error: invitationError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: interest.name },
+    data: { full_name: name },
     redirectTo,
   });
   if (invitationError || !invitation.user) {
@@ -143,11 +147,13 @@ Deno.serve(async (request) => {
     .eq("id", invitation.user.id);
   if (activationError) return respond({ code: "profile-activation-failed" }, 500);
 
-  const { error: reviewError } = await adminClient
-    .from("interest_submissions")
-    .update({ status: "approved", reviewed_by: callerId, reviewed_at: new Date().toISOString() })
-    .eq("id", interest.id);
-  if (reviewError) return respond({ code: "profile-activation-failed" }, 500);
+  if (interest) {
+    const { error: reviewError } = await adminClient
+      .from("interest_submissions")
+      .update({ status: "approved", reviewed_by: callerId, reviewed_at: new Date().toISOString() })
+      .eq("id", interest.id);
+    if (reviewError) return respond({ code: "profile-activation-failed" }, 500);
+  }
 
   return respond({ outcome: "invitation-sent", email });
 });

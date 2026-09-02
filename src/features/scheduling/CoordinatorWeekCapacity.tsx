@@ -79,7 +79,7 @@ export function CoordinatorWeekCapacity({
             </div>
           </div>
           {onCreateShift ? (
-            <button className="button-primary" onClick={onCreateShift} type="button">
+            <button className="button-primary" onClick={() => onCreateShift()} type="button">
               Create a shift
             </button>
           ) : null}
@@ -113,6 +113,7 @@ export function CoordinatorWeekCapacity({
               <section aria-labelledby={`day-${day.id}`} className="min-w-0 bg-white/50 p-4" key={day.id}>
                 <h3 className="font-display text-xl text-altar-teal" id={`day-${day.id}`}>{day.label}</h3>
                 <p className="mt-1 text-xs font-medium text-altar-sage">{day.dateLabel}</p>
+                {onCreateShift ? <button className="focus-ring mt-4 w-full rounded-sm border border-dashed border-altar-gold bg-altar-gold/10 px-3 py-2 text-left text-xs font-semibold text-altar-teal transition hover:bg-altar-gold/20" onClick={() => onCreateShift(day.id)} type="button">＋ Add shift</button> : null}
                 {day.slots.length > 0 ? (
                   <ul className="mt-4 space-y-3">
                     {day.slots.map((slot) => {

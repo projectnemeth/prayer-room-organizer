@@ -1,6 +1,7 @@
 export { createSupabaseBrowserClient, getSupabaseBrowserClient } from "./client";
 export {
   inviteVolunteerFromInterest,
+  inviteVolunteer,
   PrivateAccessError,
   requestInvitationMagicLink,
   signOutPrivateSession,

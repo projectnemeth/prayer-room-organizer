@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from 'react'
 import { Link } from 'react-router-dom'
+import { BrandLockup } from '../components/BrandLockup'
 
 const publicNavigation = [
   { label: 'Home', to: '/' },
@@ -15,12 +16,10 @@ export function AppShell({ children }: PropsWithChildren) {
         Skip to main content
       </a>
       <header className="border-b border-altar-stone bg-altar-parchment/95">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-8">
-          <Link className="font-display text-xl tracking-[0.08em] text-altar-teal" to="/">
-            THE ALTAR INITIATIVE
-          </Link>
-          <nav aria-label="Main navigation">
-            <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium text-altar-teal sm:gap-x-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-stretch gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-8 sm:py-5">
+          <BrandLockup />
+          <nav aria-label="Main navigation" className="min-w-0">
+            <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium text-altar-teal sm:justify-end sm:gap-x-6">
               {publicNavigation.map((item) => (
                 <li key={item.to}>
                   <Link className="focus-ring rounded-sm hover:text-altar-gold" to={item.to}>

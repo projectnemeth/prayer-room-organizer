@@ -51,7 +51,7 @@ export interface CoordinatorWeekCapacityProps {
   weekLabel: string;
   days: CapacityDay[];
   onSelectSlot?: (slot: CapacitySlot) => void;
-  onCreateShift?: () => void;
+  onCreateShift?: (dayId?: string) => void;
   onPreviousWeek?: () => void;
   onNextWeek?: () => void;
   onToday?: () => void;

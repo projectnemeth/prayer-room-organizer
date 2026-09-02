@@ -89,7 +89,7 @@ function CalendarEvent({ gathering }: { gathering: PublicGathering }) {
   const colour = gathering.kind === "morning" ? "border-altar-gold bg-altar-gold/10" : "border-altar-teal bg-altar-teal/10";
 
   return (
-    <article className={`border-l-2 px-2 py-1.5 text-left ${colour}`}>
+    <article className={`min-w-0 overflow-hidden border-l-2 px-2 py-1.5 text-left ${colour}`}>
       <p className="text-[11px] font-semibold leading-4 text-altar-ink/80">{eventTime(gathering)}</p>
       <p className="text-xs font-semibold leading-4 text-altar-ink">{gathering.title}</p>
       {gathering.timeLabel ? <p className="text-[10px] leading-4 text-altar-sage">{gathering.timeLabel}</p> : null}
@@ -106,8 +106,23 @@ function MonthGrid({ month, gatheringsByDate }: { month: Date; gatheringsByDate:
   const days = Array.from({ length: cellCount }, (_, index) => addDays(gridStart, index));
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[44rem]">
+    <>
+      <div className="space-y-2 md:hidden">
+        {days.filter((day) => day.getMonth() === month.getMonth()).map((day) => {
+          const events = gatheringsByDate.get(dateKey(day)) ?? [];
+          return (
+            <section className="border border-altar-sage/25 bg-white/40 p-3" key={dateKey(day)}>
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="font-semibold text-altar-teal">{formatDayLabel(day)}</p>
+                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-altar-sage">{events.length ? `${events.length} gathering${events.length === 1 ? "" : "s"}` : "Open day"}</span>
+              </div>
+              {events.length > 0 ? <div className="mt-3 space-y-2">{events.map((gathering) => <CalendarEvent gathering={gathering} key={gathering.id} />)}</div> : <p className="mt-2 text-sm text-altar-sage">No corporate gathering scheduled.</p>}
+            </section>
+          );
+        })}
+      </div>
+      <div className="hidden overflow-x-auto md:block">
+        <div className="min-w-[44rem]">
         <div className="grid grid-cols-7 border-y border-altar-sage/30 bg-altar-stone/20">
           {dayLabels.map((label) => <p className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.12em] text-altar-sage" key={label}>{label}</p>)}
         </div>
@@ -125,8 +140,9 @@ function MonthGrid({ month, gatheringsByDate }: { month: Date; gatheringsByDate:
             );
           })}
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -134,8 +150,15 @@ function WeekGrid({ weekStart, gatheringsByDate }: { weekStart: Date; gatherings
   const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
 
   return (
-    <div className="overflow-x-auto">
-      <div className="grid min-w-[52rem] grid-cols-7 border-l border-t border-altar-sage/25">
+    <>
+      <div className="space-y-2 md:hidden">
+        {days.map((day) => {
+          const events = gatheringsByDate.get(dateKey(day)) ?? [];
+          return <section className="border border-altar-sage/25 bg-white/40 p-3" key={dateKey(day)}><h2 className="border-b border-altar-sage/20 pb-2 text-sm font-semibold text-altar-teal">{formatDayLabel(day)}</h2>{events.length > 0 ? <div className="mt-3 space-y-2">{events.map((gathering) => <CalendarEvent gathering={gathering} key={gathering.id} />)}</div> : <p className="mt-2 text-sm leading-6 text-altar-sage">No corporate gathering scheduled.</p>}</section>;
+        })}
+      </div>
+      <div className="hidden overflow-x-auto md:block">
+        <div className="grid min-w-[52rem] grid-cols-7 border-l border-t border-altar-sage/25">
         {days.map((day) => {
           const events = gatheringsByDate.get(dateKey(day)) ?? [];
           return (
@@ -149,8 +172,9 @@ function WeekGrid({ weekStart, gatheringsByDate }: { weekStart: Date; gatherings
             </section>
           );
         })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -203,7 +227,7 @@ export function PublicCalendar({ gatherings: suppliedGatherings }: PublicCalenda
   const next = () => setCursor((current) => view === "month" ? addMonths(current, 1) : addDays(current, 7));
 
   return (
-    <main className="min-h-full bg-altar-parchment px-6 py-14 text-altar-ink sm:px-10 lg:px-16">
+    <main className="min-h-full bg-altar-parchment px-4 py-10 text-altar-ink sm:px-10 sm:py-14 lg:px-16">
       <div className="mx-auto max-w-6xl">
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-altar-teal">The Altar Initiative</p>
@@ -232,11 +256,11 @@ export function PublicCalendar({ gatherings: suppliedGatherings }: PublicCalenda
             })}
           </fieldset>
 
-          <div className="flex w-fit rounded-sm border border-altar-teal/50 bg-white/40 p-1" role="group" aria-label="Calendar view">
+          <div className="flex w-full rounded-sm border border-altar-teal/50 bg-white/40 p-1 sm:w-fit" role="group" aria-label="Calendar view">
             {(["month", "week"] as const).map((option) => (
               <button
                 aria-pressed={view === option}
-                className={`focus-ring rounded-sm px-3 py-2 text-sm font-semibold ${view === option ? "bg-altar-teal text-altar-parchment" : "text-altar-teal"}`}
+                className={`focus-ring flex-1 rounded-sm px-3 py-2 text-sm font-semibold sm:flex-none ${view === option ? "bg-altar-teal text-altar-parchment" : "text-altar-teal"}`}
                 key={option}
                 onClick={() => setView(option)}
                 type="button"
@@ -248,10 +272,10 @@ export function PublicCalendar({ gatherings: suppliedGatherings }: PublicCalenda
         </div>
 
         <section className="mt-7" aria-labelledby="calendar-period">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <button aria-label={`Previous ${view}`} className="focus-ring rounded-sm border border-altar-teal px-3 py-2 text-sm font-semibold text-altar-teal hover:bg-white/60" onClick={previous} type="button">← Previous</button>
-            <h2 className="text-center font-display text-2xl text-altar-teal sm:text-3xl" id="calendar-period">{view === "month" ? formatCalendarHeading(cursor) : formatWeekHeading(weekStart)}</h2>
-            <button aria-label={`Next ${view}`} className="focus-ring rounded-sm border border-altar-teal px-3 py-2 text-sm font-semibold text-altar-teal hover:bg-white/60" onClick={next} type="button">Next →</button>
+          <div className="mb-5 grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:flex sm:justify-between sm:gap-4">
+            <button aria-label={`Previous ${view}`} className="focus-ring rounded-sm border border-altar-teal px-2 py-2 text-sm font-semibold text-altar-teal hover:bg-white/60 sm:px-3" onClick={previous} type="button"><span className="sm:hidden">←</span><span className="hidden sm:inline">← Previous</span></button>
+            <h2 className="text-center font-display text-xl text-altar-teal sm:text-3xl" id="calendar-period">{view === "month" ? formatCalendarHeading(cursor) : formatWeekHeading(weekStart)}</h2>
+            <button aria-label={`Next ${view}`} className="focus-ring rounded-sm border border-altar-teal px-2 py-2 text-sm font-semibold text-altar-teal hover:bg-white/60 sm:px-3" onClick={next} type="button"><span className="sm:hidden">→</span><span className="hidden sm:inline">Next →</span></button>
           </div>
 
           {view === "month" ? <MonthGrid gatheringsByDate={gatheringsByDate} month={cursor} /> : <WeekGrid gatheringsByDate={gatheringsByDate} weekStart={weekStart} />}
