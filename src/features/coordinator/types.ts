@@ -1,5 +1,10 @@
 export type InterestReviewStatus = "new" | "in-conversation" | "invited" | "not-moving-forward";
 
+/** The immediate, coordinator-visible outcome of an invitation action. */
+export type InterestInvitationResult =
+  | { outcome: "invitation-sent"; email: string }
+  | { outcome: "access-activated"; email: string };
+
 /**
  * Coordinator-safe information collected through the public serve-interest
  * form. It intentionally represents interest, not a volunteer account or a
@@ -22,10 +27,11 @@ export interface InterestReviewQueueProps {
   /** Opens the coordinator-owned follow-up conversation for this interest. */
   onOpenInterest?: (interestId: string) => void;
   /**
-   * Starts the private invitation workflow. This is never a public signup or
-   * automatic volunteer approval action.
+   * Sends a private invitation through a coordinator-authorized server action.
+   * The resolved result is shown to the coordinator; a rejected promise leaves
+   * the record unchanged and shows a retryable failure state.
    */
-  onStartInvitation?: (interestId: string) => void;
+  onStartInvitation?: (interestId: string) => void | Promise<InterestInvitationResult | void>;
   /** Records that this interest will not move forward right now. */
   onMarkNotMovingForward?: (interestId: string) => void;
 }

@@ -3,6 +3,7 @@ node_modules/
 dist/
 coverage/
 .pnpm-store/
+supabase/.temp/
 
 # Local environment files
 .env

@@ -1,5 +1,13 @@
 export { createSupabaseBrowserClient, getSupabaseBrowserClient } from "./client";
-export { requestInvitationMagicLink } from './auth'
+export {
+  inviteVolunteerFromInterest,
+  PrivateAccessError,
+  requestInvitationMagicLink,
+  signOutPrivateSession,
+  VolunteerInvitationError,
+  type PrivateAccessErrorCode,
+  type VolunteerInvitationResult,
+} from './auth'
 export {
   getSupabaseBrowserConfig,
   hasSupabaseBrowserConfig,
@@ -9,6 +17,8 @@ export {
 export {
   submitServeInterest,
   subscribeToUpdates,
+  confirmUpdateSubscription,
+  unsubscribeFromUpdates,
   type ServeInterestSubmission,
   type UpdatesSubscription,
 } from "./public-submissions";

@@ -1,0 +1,153 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+type InvitationResponse =
+  | { outcome: "invitation-sent"; email: string }
+  | { outcome: "access-activated"; email: string };
+
+const corsHeaders = {
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Origin": "*",
+};
+
+function respond(body: InvitationResponse | { code: string }, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function isUuid(value: unknown): value is string {
+  return typeof value === "string"
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+/**
+ * Creates a private Auth invitation only after independently verifying that the
+ * requester is an active coordinator or administrator. The service-role key
+ * never leaves this function and the browser cannot choose the role, email,
+ * or profile being granted access.
+ */
+Deno.serve(async (request) => {
+  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (request.method !== "POST") return respond({ code: "method-not-allowed" }, 405);
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const authorization = request.headers.get("Authorization");
+
+  if (!supabaseUrl || !anonKey || !serviceRoleKey) return respond({ code: "server-misconfigured" }, 500);
+  if (!authorization?.startsWith("Bearer ")) return respond({ code: "unauthorized" }, 401);
+
+  let body: { interestId?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return respond({ code: "invalid-request" }, 400);
+  }
+  if (!isUuid(body.interestId)) return respond({ code: "invalid-request" }, 400);
+
+  const callerClient = createClient(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: { headers: { Authorization: authorization } },
+  });
+  const { data: userData, error: userError } = await callerClient.auth.getUser();
+  if (userError || !userData.user) return respond({ code: "unauthorized" }, 401);
+
+  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const callerId = userData.user.id;
+  const { data: caller, error: callerError } = await adminClient
+    .from("profiles")
+    .select("id, role, status")
+    .eq("id", callerId)
+    .maybeSingle();
+
+  if (
+    callerError
+    || !caller
+    || caller.status !== "active"
+    || (caller.role !== "coordinator" && caller.role !== "admin")
+  ) {
+    return respond({ code: "forbidden" }, 403);
+  }
+
+  const { data: interest, error: interestError } = await adminClient
+    .from("interest_submissions")
+    .select("id, name, email, status")
+    .eq("id", body.interestId)
+    .maybeSingle();
+  if (interestError || !interest) return respond({ code: "interest-not-found" }, 404);
+  if (interest.status !== "submitted" && interest.status !== "reviewing") return respond({ code: "interest-not-ready" }, 409);
+
+  const email = interest.email.trim().toLowerCase();
+  const { data: existingProfile, error: profileLookupError } = await adminClient
+    .from("profiles")
+    .select("id, role, status")
+    .eq("email", email)
+    .maybeSingle();
+  if (profileLookupError) return respond({ code: "profile-activation-failed" }, 500);
+
+  if (existingProfile) {
+    const profileUpdate: Record<string, unknown> = {
+      status: "active",
+      approved_at: new Date().toISOString(),
+      approved_by: callerId,
+    };
+    if (existingProfile.role === "prospect") profileUpdate.role = "volunteer";
+
+    const { error: activateError } = await adminClient
+      .from("profiles")
+      .update(profileUpdate)
+      .eq("id", existingProfile.id);
+    if (activateError) return respond({ code: "profile-activation-failed" }, 500);
+
+    const { error: reviewError } = await adminClient
+      .from("interest_submissions")
+      .update({ status: "approved", reviewed_by: callerId, reviewed_at: new Date().toISOString() })
+      .eq("id", interest.id);
+    if (reviewError) return respond({ code: "profile-activation-failed" }, 500);
+
+    return respond({ outcome: "access-activated", email });
+  }
+
+  const requestOrigin = request.headers.get("Origin");
+  const allowedOrigins = new Set([
+    "https://altar.lighthouseprayerroom.org",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ]);
+  if (!requestOrigin || !allowedOrigins.has(requestOrigin)) return respond({ code: "invalid-request" }, 400);
+  const redirectTo = `${requestOrigin}/portal`;
+  const { data: invitation, error: invitationError } = await adminClient.auth.admin.inviteUserByEmail(email, {
+    data: { full_name: interest.name },
+    redirectTo,
+  });
+  if (invitationError || !invitation.user) {
+    if (invitationError?.message.toLowerCase().includes("already registered")) {
+      return respond({ code: "auth-account-exists" }, 409);
+    }
+    return respond({ code: "email-delivery-failed" }, 502);
+  }
+
+  const { error: activationError } = await adminClient
+    .from("profiles")
+    .update({
+      role: "volunteer",
+      status: "active",
+      approved_at: new Date().toISOString(),
+      approved_by: callerId,
+    })
+    .eq("id", invitation.user.id);
+  if (activationError) return respond({ code: "profile-activation-failed" }, 500);
+
+  const { error: reviewError } = await adminClient
+    .from("interest_submissions")
+    .update({ status: "approved", reviewed_by: callerId, reviewed_at: new Date().toISOString() })
+    .eq("id", interest.id);
+  if (reviewError) return respond({ code: "profile-activation-failed" }, 500);
+
+  return respond({ outcome: "invitation-sent", email });
+});

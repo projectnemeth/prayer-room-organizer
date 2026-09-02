@@ -23,3 +23,7 @@ This product is the private coordination hub for the Prayer Room, paired with a 
 ## Proposed stack
 
 React + TypeScript built as static files on the existing shared host; Supabase for database, authentication, authorization, scheduled jobs, and secure functions; Resend for email reminders. SMS is a post-pilot addition only if email reminders prove insufficient.
+
+## Communications setup
+
+Volunteer reminders and the double-opt-in public updates form use Supabase Edge Functions with server-only Resend credentials. See [communications operations](docs/communications-operations.md) before deploying those functions or scheduling the reminder worker.

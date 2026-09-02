@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { PrivateAccessError } from '../../lib/supabase'
 
 interface InvitationSignInProps {
   onRequestMagicLink: (email: string) => Promise<void>
@@ -11,14 +12,21 @@ interface InvitationSignInProps {
 export function InvitationSignIn({ onRequestMagicLink }: InvitationSignInProps) {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setStatus('sending')
+    setErrorMessage(null)
     try {
       await onRequestMagicLink(email)
       setStatus('sent')
-    } catch {
+    } catch (error) {
+      setErrorMessage(
+        error instanceof PrivateAccessError
+          ? error.userMessage
+          : 'We could not send a sign-in link right now. Please try again shortly or contact an Altar Initiative coordinator.',
+      )
       setStatus('error')
     }
   }
@@ -50,7 +58,7 @@ export function InvitationSignIn({ onRequestMagicLink }: InvitationSignInProps) 
                 value={email}
               />
             </div>
-            {status === 'error' ? <p className="border-l-2 border-altar-gold bg-altar-parchment/70 p-4 text-sm leading-6 text-altar-ink" role="alert">We couldn’t send a sign-in link right now. Please check the address or contact your Altar Initiative coordinator.</p> : null}
+            {status === 'error' ? <p className="border-l-2 border-altar-gold bg-altar-parchment/70 p-4 text-sm leading-6 text-altar-ink" role="alert">{errorMessage}</p> : null}
             <button className="button-primary" disabled={status === 'sending'} type="submit">{status === 'sending' ? 'Sending link…' : 'Email me a sign-in link'}</button>
           </form>
         )}

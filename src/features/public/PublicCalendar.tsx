@@ -1,9 +1,30 @@
-import { useMemo, useState } from "react";
-import { mockPublicGatherings } from "./mock-data";
+import { useEffect, useMemo, useState } from "react";
 import type { GatheringKind, PublicGathering } from "./types";
+import { getSupabaseBrowserClient } from "../../lib/supabase";
 
 interface PublicCalendarProps {
   gatherings?: PublicGathering[];
+}
+
+interface PublicEventRow {
+  id: string;
+  title: string;
+  description: string | null;
+  location_label: string | null;
+  participation_format: "in_person" | "online" | "hybrid" | "personal";
+  public_url: string | null;
+  starts_at: string;
+  ends_at: string;
+}
+
+function kindForTitle(title: string): GatheringKind {
+  const normalized = title.toLowerCase();
+  return normalized.includes("morning") ? "morning" : normalized.includes("evening") ? "evening" : "special";
+}
+
+function mapPublicEvent(event: PublicEventRow): PublicGathering {
+  const locationType = event.participation_format === "personal" ? "in_person" : event.participation_format;
+  return { id: event.id, title: event.title, description: event.description ?? "", locationLabel: event.location_label ?? "Location to be announced", locationType, meetingUrl: event.public_url ?? undefined, startsAt: event.starts_at, endsAt: event.ends_at, kind: kindForTitle(event.title) };
 }
 
 type CalendarView = "month" | "week";
@@ -15,16 +36,14 @@ const kindLabels: Record<GatheringKind, string> = {
 };
 
 const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const churchTimeZone = "America/Denver";
 
 function dateKey(value: Date) {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return new Intl.DateTimeFormat("en-CA", { timeZone: churchTimeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
 }
 
 function gatheringDateKey(gathering: PublicGathering) {
-  return gathering.startsAt.slice(0, 10);
+  return dateKey(new Date(gathering.startsAt));
 }
 
 function parseDateKey(value: string) {
@@ -63,7 +82,7 @@ function formatDayLabel(value: Date) {
 
 function eventTime(gathering: PublicGathering) {
   if (gathering.timeLabel) return "TBA";
-  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(gathering.startsAt));
+  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: churchTimeZone }).format(new Date(gathering.startsAt));
 }
 
 function CalendarEvent({ gathering }: { gathering: PublicGathering }) {
@@ -136,12 +155,36 @@ function WeekGrid({ weekStart, gatheringsByDate }: { weekStart: Date; gatherings
 }
 
 /** A visitor-safe calendar. Its data contract deliberately excludes volunteer availability. */
-export function PublicCalendar({ gatherings = mockPublicGatherings }: PublicCalendarProps) {
+export function PublicCalendar({ gatherings: suppliedGatherings }: PublicCalendarProps) {
+  const [loadedGatherings, setLoadedGatherings] = useState<PublicGathering[]>(suppliedGatherings ?? []);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const gatherings = suppliedGatherings ?? loadedGatherings;
   const firstGathering = gatherings[0];
   const initialDate = firstGathering ? parseDateKey(gatheringDateKey(firstGathering)) : new Date();
   const [filter, setFilter] = useState<"all" | GatheringKind>("all");
   const [view, setView] = useState<CalendarView>("month");
   const [cursor, setCursor] = useState(() => new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+  useEffect(() => {
+    if (suppliedGatherings) return;
+    let active = true;
+    const load = async () => {
+      try {
+        const { data, error } = await getSupabaseBrowserClient().from("public_events").select("id, title, description, location_label, participation_format, public_url, starts_at, ends_at").order("starts_at", { ascending: true });
+        if (error) throw error;
+        if (!active) return;
+        const records = ((data ?? []) as PublicEventRow[]).map(mapPublicEvent);
+        setLoadedGatherings(records);
+        if (records[0]) {
+          const date = parseDateKey(gatheringDateKey(records[0]));
+          setCursor(new Date(date.getFullYear(), date.getMonth(), 1));
+        }
+      } catch {
+        if (active) setLoadError("Gatherings could not be loaded right now. Please try again shortly.");
+      }
+    };
+    void load();
+    return () => { active = false; };
+  }, [suppliedGatherings]);
   const visibleGatherings = useMemo(
     () => gatherings.filter((gathering) => filter === "all" || gathering.kind === filter),
     [filter, gatherings],
@@ -165,8 +208,9 @@ export function PublicCalendar({ gatherings = mockPublicGatherings }: PublicCale
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-altar-teal">The Altar Initiative</p>
           <h1 className="mt-4 font-display text-4xl text-altar-teal sm:text-5xl">Gatherings</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-altar-ink/80">Weekdays in October, gather for Morning and Evening Altar—worship-led moments of Scripture and prayer in the Lighthouse Prayer Room and online.</p>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-altar-ink/80">Gather for worship, Scripture, and prayer in the Lighthouse Prayer Room and online when indicated.</p>
         </header>
+        {loadError ? <p className="mt-6 border-l-2 border-altar-gold bg-white/50 p-4 text-sm" role="alert">{loadError}</p> : null}
 
         <div className="mt-9 flex flex-col gap-5 border-y border-altar-sage/30 py-5 lg:flex-row lg:items-center lg:justify-between">
           <fieldset className="flex flex-wrap gap-2" aria-label="Filter gatherings">
@@ -213,9 +257,7 @@ export function PublicCalendar({ gatherings = mockPublicGatherings }: PublicCale
           {view === "month" ? <MonthGrid gatheringsByDate={gatheringsByDate} month={cursor} /> : <WeekGrid gatheringsByDate={gatheringsByDate} weekStart={weekStart} />}
         </section>
 
-        <aside className="mt-8 border-l-2 border-altar-gold bg-white/45 p-5 text-sm leading-6 text-altar-ink/75">
-          Morning Altar meets 6:30–7:30 AM. Evening Altar is announced for each weekday and its time will be added here once confirmed. Both gatherings are in person and online.
-        </aside>
+        {gatherings.length === 0 && !loadError ? <aside className="mt-8 border-l-2 border-altar-gold bg-white/45 p-5 text-sm leading-6 text-altar-ink/75">No gatherings have been published yet. Please check back soon.</aside> : null}
       </div>
     </main>
   );

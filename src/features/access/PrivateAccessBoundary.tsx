@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { PortalAccessDenied } from "../portal";
-import { getSupabaseBrowserClient, hasSupabaseBrowserConfig } from "../../lib/supabase";
+import { getSupabaseBrowserClient, hasSupabaseBrowserConfig, signOutPrivateSession } from "../../lib/supabase";
 
 export type PrivateProfileRole = "volunteer" | "coordinator" | "admin";
 
@@ -34,6 +34,8 @@ function AccessLoadingState() {
  */
 export function PrivateAccessBoundary({ children, requireCoordinator = false }: PrivateAccessBoundaryProps) {
   const [access, setAccess] = useState<AccessState>({ kind: "loading" });
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -90,5 +92,28 @@ export function PrivateAccessBoundary({ children, requireCoordinator = false }: 
     return <PortalAccessDenied requestAccessLink={{ href: "/serve", label: "Share your interest" }} supportLink={{ href: "/access", label: "Sign in" }} />;
   }
 
-  return <>{children(access.profile)}</>;
+  const signOut = async () => {
+    setIsSigningOut(true);
+    setSignOutError(null);
+    try {
+      await signOutPrivateSession(getSupabaseBrowserClient());
+      window.location.assign("/access");
+    } catch (error) {
+      setSignOutError(error instanceof Error ? error.message : "We could not sign you out on this device. Please try again.");
+      setIsSigningOut(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div className="absolute right-6 top-3 z-10 flex items-center gap-3 sm:right-10 lg:right-16">
+        <span className="hidden text-xs font-medium text-altar-sage sm:inline">Signed in as {access.profile.displayName || "team member"}</span>
+        <button className="focus-ring text-xs font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" disabled={isSigningOut} onClick={() => void signOut()} type="button">
+          {isSigningOut ? "Signing out…" : "Sign out"}
+        </button>
+      </div>
+      {signOutError ? <p className="absolute left-6 right-6 top-12 z-10 border-l-2 border-altar-gold bg-white/90 p-3 text-sm text-altar-ink sm:left-auto sm:right-10 sm:w-96 lg:right-16" role="alert">{signOutError}</p> : null}
+      {children(access.profile)}
+    </div>
+  );
 }

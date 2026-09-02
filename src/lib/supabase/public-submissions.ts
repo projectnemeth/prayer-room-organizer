@@ -14,8 +14,8 @@ export interface ServeInterestSubmission {
 /** Schema-aligned payload for the public updates opt-in form. */
 export interface UpdatesSubscription {
   email: string;
-  /** Stored with consent so its origin is auditable. */
-  consentSource?: string;
+  /** Honeypot only; a filled value is accepted without sending an email. */
+  website?: string;
 }
 
 function requiredText(value: string, field: string): string {
@@ -70,20 +70,34 @@ export async function submitServeInterest(
   }
 }
 
-/**
- * Records a public email-updates opt-in through the narrowly scoped database
- * function. It cannot expose or modify volunteer scheduling data.
- */
+/** Starts a double-opt-in request through a public, rate-limited Edge Function. */
 export async function subscribeToUpdates(
   client: SupabaseClient,
   subscription: UpdatesSubscription,
 ): Promise<void> {
-  const { error } = await client.rpc("subscribe_to_updates", {
-    p_email: email(subscription.email),
-    p_consent_source: optionalText(subscription.consentSource) ?? "public_updates_form",
+  const { error } = await client.functions.invoke("request-update-subscription", {
+    body: { email: email(subscription.email), website: optionalText(subscription.website) ?? "" },
   });
 
   if (error) {
-    throw new Error(`Unable to subscribe to updates: ${error.message}`);
+    throw new Error("We could not start your email confirmation. Please try again shortly.");
   }
+}
+
+/** Confirms a one-time update subscription token from the recipient's email. */
+export async function confirmUpdateSubscription(client: SupabaseClient, token: string): Promise<boolean> {
+  const { data, error } = await client.functions.invoke<{ confirmed?: unknown }>("confirm-update-subscription", {
+    body: { token },
+  });
+  if (error) throw new Error("We could not confirm this subscription right now.");
+  return data?.confirmed === true;
+}
+
+/** Applies an opaque, recipient-held update unsubscribe token. */
+export async function unsubscribeFromUpdates(client: SupabaseClient, token: string): Promise<boolean> {
+  const { data, error } = await client.functions.invoke<{ unsubscribed?: unknown }>("unsubscribe-updates", {
+    body: { token },
+  });
+  if (error) throw new Error("We could not process this unsubscribe request right now.");
+  return data?.unsubscribed === true;
 }

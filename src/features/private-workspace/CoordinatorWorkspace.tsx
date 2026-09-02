@@ -1,320 +1,63 @@
-import { useCallback, useEffect, useState } from 'react'
-import {
-  CoordinationOverview,
-  InterestReviewQueue,
-  type CoordinationOverviewData,
-  type ServeInterestReviewItem,
-} from '../coordinator'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { CoordinationOverview, InterestReviewQueue, type CoordinationOverviewData, type ServeInterestReviewItem } from '../coordinator'
 import { CoordinatorWeekCapacity, type CapacityDay, type CapacitySlot } from '../scheduling'
-import { getSupabaseBrowserClient } from '../../lib/supabase'
+import { getSupabaseBrowserClient, inviteVolunteerFromInterest } from '../../lib/supabase'
 
 type InterestStatus = 'submitted' | 'reviewing' | 'approved' | 'declined'
-
-interface InterestRow {
-  id: string
-  name: string
-  email: string
-  submitted_at: string
-  availability: string[] | null
-  desired_ways_to_serve: string[] | null
-  notes: string | null
-  status: InterestStatus
-}
-
-interface ShiftRow {
-  id: string
-  starts_at: string
-  ends_at: string
-  required_volunteers: number
-  status: 'scheduled' | 'cancelled' | 'completed'
-}
-
-interface AssignmentRow {
-  shift_id: string
-  assignment_status: 'assigned' | 'confirmed' | 'cancelled' | 'declined'
-}
-
-interface CoordinatorState {
-  interests: ServeInterestReviewItem[]
-  overview: CoordinationOverviewData
-  days: CapacityDay[]
-  profiles: AdminProfileRow[]
-}
-
-interface AdminProfileRow {
-  id: string
-  display_name: string
-  email: string
-  role: 'prospect' | 'volunteer' | 'coordinator' | 'admin'
-  status: 'invited' | 'active' | 'suspended' | 'archived'
-}
-
+type ShiftStatus = 'scheduled' | 'cancelled' | 'completed'
+type EventFormat = 'in_person' | 'online' | 'hybrid' | 'personal'
+interface InterestRow { id: string; name: string; email: string; submitted_at: string; availability: string[] | null; desired_ways_to_serve: string[] | null; notes: string | null; status: InterestStatus }
+interface ScheduleRow { id: string; starts_at: string; ends_at: string; required_volunteers: number; assigned_count: number; status: ShiftStatus; title: string; volunteer_instructions: string | null; is_public: boolean; public_description: string | null; location_label: string | null; participation_format: EventFormat | null; public_url: string | null }
+interface VolunteerRow { id: string; display_name: string; email: string }
+interface AdminProfileRow { id: string; display_name: string; email: string; role: 'prospect' | 'volunteer' | 'coordinator' | 'admin'; status: 'invited' | 'active' | 'suspended' | 'archived' }
+interface CoordinatorState { interests: ServeInterestReviewItem[]; overview: CoordinationOverviewData; days: CapacityDay[]; profiles: AdminProfileRow[]; schedule: ScheduleRow[]; volunteers: VolunteerRow[] }
 type CoordinatorView = 'overview' | 'interests' | 'schedule' | 'people'
+const churchTimeZone = 'America/Denver'
+const emptyState: CoordinatorState = { interests: [], days: [], profiles: [], schedule: [], volunteers: [], overview: { periodLabel: 'The coming seven days', upcomingGatherings: 0, openVolunteerSlots: 0, scheduledVolunteerSlots: 0, pendingInterests: 0, attentionItems: [] } }
 
-const emptyState: CoordinatorState = {
-  interests: [],
-  overview: {
-    periodLabel: 'The coming seven days',
-    upcomingGatherings: 0,
-    openVolunteerSlots: 0,
-    scheduledVolunteerSlots: 0,
-    pendingInterests: 0,
-    attentionItems: [],
-  },
-  days: [],
-  profiles: [],
+function reviewStatus(status: InterestStatus): ServeInterestReviewItem['status'] { return status === 'reviewing' ? 'in-conversation' : status === 'approved' ? 'invited' : status === 'declined' ? 'not-moving-forward' : 'new' }
+function dateKey(value: string | Date) { return new Intl.DateTimeFormat('en-CA', { timeZone: churchTimeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(value)) }
+function startOfDay(value: Date) { return new Date(value.getFullYear(), value.getMonth(), value.getDate()) }
+function formatWeekLabel(start: Date, end: Date) { const f = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: churchTimeZone }); return `${f.format(start)}–${f.format(end)}` }
+function toDateTimeLocal(value: string) { const date = new Date(value); return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16) }
+function defaultShiftValues(date = new Date()) { const start = new Date(date); start.setHours(18, 0, 0, 0); const end = new Date(start); end.setHours(19, 0, 0, 0); return { title: 'Prayer-room gathering', startsAt: toDateTimeLocal(start.toISOString()), endsAt: toDateTimeLocal(end.toISOString()), requiredVolunteers: 1, instructions: '', published: false, description: '', locationLabel: 'Lighthouse Prayer Room', participationFormat: 'hybrid' as EventFormat, publicUrl: '' } }
+type ShiftFormValues = ReturnType<typeof defaultShiftValues>
+
+function buildDays(shifts: ScheduleRow[]) {
+  const now = startOfDay(new Date()); const days = Array.from({ length: 7 }, (_, i) => { const date = new Date(now); date.setDate(now.getDate() + i); return { id: dateKey(date), label: new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: churchTimeZone }).format(date), dateLabel: new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: churchTimeZone }).format(date), slots: [] as CapacitySlot[] } })
+  const byDay = new Map(days.map((day) => [day.id, day])); shifts.forEach((shift) => { const day = byDay.get(dateKey(shift.starts_at)); if (day) day.slots.push({ id: shift.id, startsAt: shift.starts_at, endsAt: shift.ends_at, label: shift.title, capacity: shift.required_volunteers, assignedCount: Number(shift.assigned_count), status: shift.status }) }); return days
 }
 
-function reviewStatus(status: InterestStatus): ServeInterestReviewItem['status'] {
-  if (status === 'reviewing') return 'in-conversation'
-  if (status === 'approved') return 'invited'
-  if (status === 'declined') return 'not-moving-forward'
-  return 'new'
+function ShiftEditor({ initialValues, mode, onCancel, onSave, isSaving }: { initialValues: ShiftFormValues; mode: 'create' | 'edit'; onCancel: () => void; onSave: (values: ShiftFormValues) => void; isSaving: boolean }) {
+  const [values, setValues] = useState(initialValues); const update = <K extends keyof ShiftFormValues>(key: K, value: ShiftFormValues[K]) => setValues((old) => ({ ...old, [key]: value }))
+  return <section className="mt-6 border-l-2 border-altar-gold bg-white/55 p-5 sm:p-6" aria-labelledby="shift-editor-heading"><h3 className="font-display text-2xl text-altar-teal" id="shift-editor-heading">{mode === 'create' ? 'Create a shift' : 'Edit shift'}</h3><p className="mt-2 text-sm leading-6 text-altar-ink/70">Create the room reservation and volunteer coverage together. Publishing only shares the gathering details entered below.</p><form className="mt-5 grid gap-4 md:grid-cols-2" onSubmit={(event) => { event.preventDefault(); onSave(values) }}>
+    <label className="grid gap-1 text-sm font-semibold md:col-span-2">Gathering title<input className="rounded-sm border border-altar-sage/45 bg-white px-3 py-2 font-normal" required value={values.title} onChange={(e) => update('title', e.target.value)} /></label>
+    <label className="grid gap-1 text-sm font-semibold">Starts (America/Denver)<input className="rounded-sm border border-altar-sage/45 bg-white px-3 py-2 font-normal" required type="datetime-local" value={values.startsAt} onChange={(e) => update('startsAt', e.target.value)} /></label><label className="grid gap-1 text-sm font-semibold">Ends (America/Denver)<input className="rounded-sm border border-altar-sage/45 bg-white px-3 py-2 font-normal" required type="datetime-local" value={values.endsAt} onChange={(e) => update('endsAt', e.target.value)} /></label>
+    <label className="grid gap-1 text-sm font-semibold">Volunteer places<input className="rounded-sm border border-altar-sage/45 bg-white px-3 py-2 font-normal" required type="number" min="1" max="20" value={values.requiredVolunteers} onChange={(e) => update('requiredVolunteers', Number(e.target.value))} /></label><label className="grid gap-1 text-sm font-semibold">Volunteer instructions<input className="rounded-sm border border-altar-sage/45 bg-white px-3 py-2 font-normal" value={values.instructions} onChange={(e) => update('instructions', e.target.value)} /></label>
+    <label className="flex items-center gap-3 text-sm font-semibold text-altar-teal md:col-span-2"><input type="checkbox" checked={values.published} onChange={(e) => update('published', e.target.checked)} /> Show this gathering on the public calendar</label>
+    {values.published ? <><label className="grid gap-1 text-sm font-semibold md:col-span-2">Public description<textarea className="min-h-20 rounded-sm border border-altar-sage/45 bg-white px-3 py-2 font-normal" value={values.description} onChange={(e) => update('description', e.target.value)} /></label><label className="grid gap-1 text-sm font-semibold">Location<input className="rounded-sm border border-altar-sage/45 bg-white px-3 py-2 font-normal" value={values.locationLabel} onChange={(e) => update('locationLabel', e.target.value)} /></label><label className="grid gap-1 text-sm font-semibold">Gathering format<select className="rounded-sm border border-altar-sage/45 bg-white px-3 py-2 font-normal" value={values.participationFormat} onChange={(e) => update('participationFormat', e.target.value as EventFormat)}><option value="in_person">In person</option><option value="online">Online</option><option value="hybrid">In person + online</option></select></label><label className="grid gap-1 text-sm font-semibold md:col-span-2">Public meeting link (optional)<input className="rounded-sm border border-altar-sage/45 bg-white px-3 py-2 font-normal" type="url" value={values.publicUrl} onChange={(e) => update('publicUrl', e.target.value)} /></label></> : null}
+    <div className="flex flex-wrap gap-3 pt-2 md:col-span-2"><button className="button-primary" disabled={isSaving} type="submit">{isSaving ? 'Saving…' : mode === 'create' ? 'Create shift' : 'Save changes'}</button><button className="focus-ring rounded-sm border border-altar-teal px-4 py-2 text-sm font-semibold text-altar-teal" type="button" onClick={onCancel}>Cancel</button></div>
+  </form></section>
 }
 
-function dateKey(value: string) {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Denver',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date(value))
-}
+function AdminPeopleManager({ currentProfileId, profiles, onPromote }: { currentProfileId: string; profiles: AdminProfileRow[]; onPromote: (profileId: string) => void }) { return <section className="mx-auto max-w-6xl bg-white/45 p-6 sm:p-8" aria-labelledby="people-heading"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Administrator workspace</p><h2 className="mt-3 font-display text-3xl text-altar-ink" id="people-heading">People and access</h2><p className="mt-3 max-w-3xl leading-7 text-altar-ink/75">Create or invite a person through Supabase first. Once their profile appears here, an active administrator can grant them administrator access. This never opens public sign-up.</p><div className="mt-7 overflow-x-auto"><table className="min-w-full border-collapse text-left text-sm"><thead><tr className="border-b border-altar-sage/30 text-altar-sage"><th className="px-3 py-3 font-semibold">Person</th><th className="px-3 py-3 font-semibold">Current access</th><th className="px-3 py-3 font-semibold">Action</th></tr></thead><tbody>{profiles.map((profile) => <tr className="border-b border-altar-sage/20" key={profile.id}><td className="px-3 py-4"><p className="font-semibold text-altar-ink">{profile.display_name || 'Invited person'}</p><p className="mt-1 text-altar-ink/70">{profile.email}</p></td><td className="px-3 py-4 text-altar-ink/75">{profile.role} · {profile.status}</td><td className="px-3 py-4">{profile.id === currentProfileId ? <span className="text-altar-sage">Your account</span> : profile.role === 'admin' && profile.status === 'active' ? <span className="text-altar-sage">Administrator</span> : <button className="focus-ring rounded-sm border border-altar-teal px-3 py-2 font-semibold text-altar-teal hover:bg-altar-stone/40" onClick={() => onPromote(profile.id)} type="button">Make administrator</button>}</td></tr>)}</tbody></table></div></section> }
 
-function startOfDay(value: Date) {
-  return new Date(value.getFullYear(), value.getMonth(), value.getDate())
-}
-
-function formatWeekLabel(start: Date, end: Date) {
-  const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Denver' })
-  return `${formatter.format(start)}–${formatter.format(end)}`
-}
-
-function buildDays(shifts: ShiftRow[], assignments: AssignmentRow[]) {
-  const assignedByShift = new Map<string, number>()
-  assignments
-    .filter((assignment) => assignment.assignment_status === 'assigned' || assignment.assignment_status === 'confirmed')
-    .forEach((assignment) => assignedByShift.set(assignment.shift_id, (assignedByShift.get(assignment.shift_id) ?? 0) + 1))
-
-  const now = startOfDay(new Date())
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(now)
-    date.setDate(now.getDate() + index)
-    const key = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Denver', year: 'numeric', month: '2-digit', day: '2-digit',
-    }).format(date)
-    return {
-      id: key,
-      label: new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'America/Denver' }).format(date),
-      dateLabel: new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Denver' }).format(date),
-      slots: [] as CapacitySlot[],
-    }
-  })
-
-  const dayByKey = new Map(days.map((day) => [day.id, day]))
-  shifts.forEach((shift) => {
-    const day = dayByKey.get(dateKey(shift.starts_at))
-    if (!day) return
-    day.slots.push({
-      id: shift.id,
-      startsAt: shift.starts_at,
-      endsAt: shift.ends_at,
-      label: 'Prayer-room shift',
-      capacity: shift.required_volunteers,
-      assignedCount: assignedByShift.get(shift.id) ?? 0,
-      status: shift.status,
-    })
-  })
-
-  return days
-}
-
-interface CoordinatorWorkspaceProps {
-  currentProfileId: string
-  currentRole: 'coordinator' | 'admin'
-  initialView?: CoordinatorView
-}
-
-function AdminPeopleManager({ currentProfileId, profiles, onPromote }: { currentProfileId: string; profiles: AdminProfileRow[]; onPromote: (profileId: string) => void }) {
-  return (
-    <section className="mx-auto max-w-6xl bg-white/45 p-6 sm:p-8" aria-labelledby="people-heading">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Administrator workspace</p>
-      <h2 className="mt-3 font-display text-3xl text-altar-ink" id="people-heading">People and access</h2>
-      <p className="mt-3 max-w-3xl leading-7 text-altar-ink/75">Create or invite a person through Supabase first. Once their profile appears here, an active administrator can grant them administrator access. This never opens public sign-up.</p>
-      <div className="mt-7 overflow-x-auto">
-        <table className="min-w-full border-collapse text-left text-sm">
-          <thead><tr className="border-b border-altar-sage/30 text-altar-sage"><th className="px-3 py-3 font-semibold">Person</th><th className="px-3 py-3 font-semibold">Current access</th><th className="px-3 py-3 font-semibold">Action</th></tr></thead>
-          <tbody>
-            {profiles.map((profile) => (
-              <tr className="border-b border-altar-sage/20" key={profile.id}>
-                <td className="px-3 py-4"><p className="font-semibold text-altar-ink">{profile.display_name || 'Invited person'}</p><p className="mt-1 text-altar-ink/70">{profile.email}</p></td>
-                <td className="px-3 py-4 text-altar-ink/75">{profile.role} · {profile.status}</td>
-                <td className="px-3 py-4">
-                  {profile.id === currentProfileId ? <span className="text-altar-sage">Your account</span> : profile.role === 'admin' && profile.status === 'active' ? <span className="text-altar-sage">Administrator</span> : <button className="focus-ring rounded-sm border border-altar-teal px-3 py-2 font-semibold text-altar-teal hover:bg-altar-stone/40" onClick={() => onPromote(profile.id)} type="button">Make administrator</button>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  )
-}
-
+interface CoordinatorWorkspaceProps { currentProfileId: string; currentRole: 'coordinator' | 'admin'; initialView?: CoordinatorView }
 export function CoordinatorWorkspace({ currentProfileId, currentRole, initialView = 'overview' }: CoordinatorWorkspaceProps) {
-  const [view, setView] = useState<CoordinatorView>(initialView)
-  const [state, setState] = useState<CoordinatorState>(emptyState)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const load = useCallback(async () => {
-    const client = getSupabaseBrowserClient()
-    const now = new Date()
-    const end = new Date(now)
-    end.setDate(end.getDate() + 7)
-
-    const [{ data: interests, error: interestsError }, { data: shifts, error: shiftsError }, profilesResult] = await Promise.all([
-      client
-        .from('interest_submissions')
-        .select('id, name, email, submitted_at, availability, desired_ways_to_serve, notes, status')
-        .in('status', ['submitted', 'reviewing'])
-        .order('submitted_at', { ascending: true }),
-      client
-        .from('shifts')
-        .select('id, starts_at, ends_at, required_volunteers, status')
-        .gte('starts_at', now.toISOString())
-        .lt('starts_at', end.toISOString())
-        .order('starts_at', { ascending: true }),
-      currentRole === 'admin'
-        ? client.from('profiles').select('id, display_name, email, role, status').order('email', { ascending: true })
-        : Promise.resolve({ data: [] as AdminProfileRow[], error: null }),
-    ])
-
-    if (interestsError || shiftsError || profilesResult.error) {
-      setError('Private workspace data could not be loaded. Please refresh and try again.')
-      setIsLoading(false)
-      return
-    }
-
-    const shiftRows = (shifts ?? []) as ShiftRow[]
-    const shiftIds = shiftRows.map((shift) => shift.id)
-    const { data: assignments, error: assignmentsError } = shiftIds.length === 0
-      ? { data: [] as AssignmentRow[], error: null }
-      : await client.from('shift_assignments').select('shift_id, assignment_status').in('shift_id', shiftIds)
-
-    if (assignmentsError) {
-      setError('Private schedule coverage could not be loaded. Please refresh and try again.')
-      setIsLoading(false)
-      return
-    }
-
-    const interestItems = ((interests ?? []) as InterestRow[]).map((interest) => ({
-      id: interest.id,
-      name: interest.name,
-      email: interest.email,
-      submittedAt: interest.submitted_at,
-      availability: interest.availability ?? undefined,
-      servingInterests: interest.desired_ways_to_serve ?? undefined,
-      note: interest.notes,
-      status: reviewStatus(interest.status),
-    }))
-    const assignmentRows = (assignments ?? []) as AssignmentRow[]
-    const days = buildDays(shiftRows, assignmentRows)
-    const scheduledVolunteerSlots = assignmentRows.filter((assignment) => (
-      assignment.assignment_status === 'assigned' || assignment.assignment_status === 'confirmed'
-    )).length
-    const openVolunteerSlots = shiftRows.reduce((total, shift) => (
-      total + Math.max(shift.required_volunteers - assignmentRows.filter((assignment) => (
-        assignment.shift_id === shift.id && (assignment.assignment_status === 'assigned' || assignment.assignment_status === 'confirmed')
-      )).length, 0)
-    ), 0)
-
-    setState({
-      interests: interestItems,
-      days,
-      profiles: (profilesResult.data ?? []) as AdminProfileRow[],
-      overview: {
-        periodLabel: 'The coming seven days',
-        upcomingGatherings: shiftRows.length,
-        openVolunteerSlots,
-        scheduledVolunteerSlots,
-        pendingInterests: interestItems.length,
-        attentionItems: openVolunteerSlots > 0 ? [{
-          id: 'open-coverage',
-          title: `${openVolunteerSlots} volunteer ${openVolunteerSlots === 1 ? 'place needs' : 'places need'} coverage`,
-          description: 'Use the weekly coverage view to see where approved volunteers can be invited to serve.',
-          severity: 'needs-attention' as const,
-        }] : [],
-      },
-    })
-    setIsLoading(false)
-  }, [currentRole])
-
-  useEffect(() => {
-    const loadTimer = window.setTimeout(() => { void load() }, 0)
-    return () => window.clearTimeout(loadTimer)
-  }, [load])
-
-  const review = async (interestId: string, status: 'reviewing' | 'approved' | 'declined') => {
-    setError(null)
-    const { error: reviewError } = await getSupabaseBrowserClient().rpc('review_interest_submission', {
-      p_interest_id: interestId,
-      p_status: status,
-      p_decision_note: null,
-    })
-    if (reviewError) {
-      setError('That review decision could not be saved. Please try again.')
-      return
-    }
-    await load()
-  }
-
-  const promoteAdministrator = async (profileId: string) => {
-    setError(null)
-    const { error: promotionError } = await getSupabaseBrowserClient().from('profiles').update({ role: 'admin', status: 'active' }).eq('id', profileId)
-    if (promotionError) {
-      setError('Administrator access could not be updated. Please try again.')
-      return
-    }
-    await load()
-  }
-
-  const weekStart = startOfDay(new Date())
-  const weekEnd = new Date(weekStart)
-  weekEnd.setDate(weekStart.getDate() + 6)
-
-  return (
-    <main className="min-h-full bg-altar-parchment text-altar-ink">
-      <div className="mx-auto max-w-6xl px-6 pt-10 sm:px-10 lg:px-16">
-        <div className="flex flex-col gap-4 border-b border-altar-sage/30 pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">The Altar Initiative · Private workspace</p>
-            <h1 className="mt-3 font-display text-4xl text-altar-teal">Coordinate the room</h1>
-          </div>
-          <nav aria-label="Coordinator workspace" className="flex flex-wrap gap-2">
-            {(['overview', 'interests', 'schedule', ...(currentRole === 'admin' ? ['people'] as const : [])] as const).map((option) => (
-              <button
-                className={`focus-ring rounded-sm px-3 py-2 text-sm font-semibold ${view === option ? 'bg-altar-teal text-altar-parchment' : 'border border-altar-teal text-altar-teal'}`}
-                key={option}
-                onClick={() => setView(option)}
-                type="button"
-              >
-                {option === 'overview' ? 'Overview' : option === 'interests' ? 'Serving interests' : option === 'schedule' ? 'Weekly coverage' : 'People & access'}
-              </button>
-            ))}
-          </nav>
-        </div>
-        {error ? <p className="mt-5 border-l-2 border-altar-gold bg-white/50 p-4 text-sm text-altar-ink" role="alert">{error}</p> : null}
-      </div>
-
-      {view === 'overview' ? (
-        <div className="mx-auto max-w-6xl"><CoordinationOverview data={state.overview} isLoading={isLoading} onOpenSchedule={() => setView('schedule')} onReviewInterests={() => setView('interests')} /></div>
-      ) : null}
-      {view === 'interests' ? (
-        <div className="mx-auto max-w-6xl"><InterestReviewQueue items={state.interests} isLoading={isLoading} onOpenInterest={(id) => void review(id, 'reviewing')} onStartInvitation={(id) => void review(id, 'approved')} onMarkNotMovingForward={(id) => void review(id, 'declined')} /></div>
-      ) : null}
-      {view === 'schedule' ? <CoordinatorWeekCapacity days={state.days} weekLabel={formatWeekLabel(weekStart, weekEnd)} /> : null}
-      {view === 'people' && currentRole === 'admin' ? <AdminPeopleManager currentProfileId={currentProfileId} onPromote={(id) => void promoteAdministrator(id)} profiles={state.profiles} /> : null}
-    </main>
-  )
+  const [view, setView] = useState<CoordinatorView>(initialView); const [state, setState] = useState<CoordinatorState>(emptyState); const [isLoading, setIsLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [editingId, setEditingId] = useState<string | 'create' | null>(null); const [isSaving, setIsSaving] = useState(false); const [assigning, setAssigning] = useState(false)
+  const weekStart = useMemo(() => startOfDay(new Date()), []); const weekEnd = useMemo(() => { const end = new Date(weekStart); end.setDate(end.getDate() + 7); return end }, [weekStart])
+  const load = useCallback(async () => { const client = getSupabaseBrowserClient(); setIsLoading(true); const [{ data: interests, error: interestsError }, { data: schedule, error: scheduleError }, { data: volunteers, error: volunteersError }, profilesResult] = await Promise.all([client.from('interest_submissions').select('id, name, email, submitted_at, availability, desired_ways_to_serve, notes, status').in('status', ['submitted', 'reviewing', 'approved']).order('submitted_at', { ascending: true }), client.rpc('list_coordinator_schedule', { p_starts_at: weekStart.toISOString(), p_ends_at: weekEnd.toISOString() }), client.rpc('list_active_volunteers_for_assignment'), currentRole === 'admin' ? client.from('profiles').select('id, display_name, email, role, status').order('email', { ascending: true }) : Promise.resolve({ data: [] as AdminProfileRow[], error: null })]); if (interestsError || scheduleError || volunteersError || profilesResult.error) { setError('Private workspace data could not be loaded. Please refresh and try again.'); setIsLoading(false); return }; const rows = (schedule ?? []) as ScheduleRow[]; const interestItems = ((interests ?? []) as InterestRow[]).map((i) => ({ id: i.id, name: i.name, email: i.email, submittedAt: i.submitted_at, availability: i.availability ?? undefined, servingInterests: i.desired_ways_to_serve ?? undefined, note: i.notes, status: reviewStatus(i.status) })); const assigned = rows.reduce((total, s) => total + Number(s.assigned_count), 0); const open = rows.filter((s) => s.status === 'scheduled').reduce((total, s) => total + Math.max(s.required_volunteers - Number(s.assigned_count), 0), 0); setState({ interests: interestItems, days: buildDays(rows), schedule: rows, volunteers: (volunteers ?? []) as VolunteerRow[], profiles: (profilesResult.data ?? []) as AdminProfileRow[], overview: { periodLabel: 'The coming seven days', upcomingGatherings: rows.filter((s) => s.status === 'scheduled').length, openVolunteerSlots: open, scheduledVolunteerSlots: assigned, pendingInterests: interestItems.filter((item) => item.status !== 'invited').length, attentionItems: open > 0 ? [{ id: 'open-coverage', title: `${open} volunteer ${open === 1 ? 'place needs' : 'places need'} coverage`, description: 'Use weekly coverage to assign approved volunteers or review available slots.', severity: 'needs-attention' as const }] : [] } }); setIsLoading(false) }, [currentRole, weekEnd, weekStart])
+  useEffect(() => { const timer = window.setTimeout(() => { void load() }, 0); return () => window.clearTimeout(timer) }, [load])
+  const review = async (id: string, status: 'reviewing' | 'approved' | 'declined') => { setError(null); const { error: e } = await getSupabaseBrowserClient().rpc('review_interest_submission', { p_interest_id: id, p_status: status, p_decision_note: null }); if (e) setError('That review decision could not be saved. Please try again.'); else await load() }
+  const sendInvitation = async (id: string) => { const result = await inviteVolunteerFromInterest(getSupabaseBrowserClient(), id); await load(); return result }
+  const promoteAdministrator = async (id: string) => { const { error: e } = await getSupabaseBrowserClient().from('profiles').update({ role: 'admin', status: 'active' }).eq('id', id); if (e) setError('Administrator access could not be updated. Please try again.'); else await load() }
+  const selected = editingId && editingId !== 'create' ? state.schedule.find((s) => s.id === editingId) : undefined
+  const editorValues = selected ? { ...defaultShiftValues(), title: selected.title, startsAt: toDateTimeLocal(selected.starts_at), endsAt: toDateTimeLocal(selected.ends_at), requiredVolunteers: selected.required_volunteers, instructions: selected.volunteer_instructions ?? '', published: selected.is_public, description: selected.public_description ?? '', locationLabel: selected.location_label ?? 'Lighthouse Prayer Room', participationFormat: selected.participation_format ?? 'hybrid', publicUrl: selected.public_url ?? '' } : defaultShiftValues(weekStart)
+  const saveShift = async (v: ShiftFormValues) => { setError(null); setIsSaving(true); const params = { p_title: v.title, p_starts_at: new Date(v.startsAt).toISOString(), p_ends_at: new Date(v.endsAt).toISOString(), p_required_volunteers: v.requiredVolunteers, p_volunteer_instructions: v.instructions || null, p_publish_public: v.published, p_public_description: v.description || null, p_location_label: v.locationLabel || null, p_participation_format: v.participationFormat, p_public_url: v.publicUrl || null }; const result = editingId === 'create' ? await getSupabaseBrowserClient().rpc('coordinator_create_shift', params) : await getSupabaseBrowserClient().rpc('coordinator_update_shift', { ...params, p_shift_id: editingId, p_status: selected?.status ?? 'scheduled' }); setIsSaving(false); if (result.error) setError(result.error.message || 'This shift could not be saved.'); else { setEditingId(null); await load() } }
+  const cancelShift = async (s: ScheduleRow) => { if (!window.confirm(`Cancel “${s.title}”? Assigned volunteers will be released.`)) return; setIsSaving(true); const { error: e } = await getSupabaseBrowserClient().rpc('coordinator_update_shift', { p_shift_id: s.id, p_title: s.title, p_starts_at: s.starts_at, p_ends_at: s.ends_at, p_required_volunteers: s.required_volunteers, p_volunteer_instructions: s.volunteer_instructions, p_status: 'cancelled', p_publish_public: s.is_public, p_public_description: null, p_location_label: null, p_participation_format: 'in_person', p_public_url: null }); setIsSaving(false); if (e) setError(e.message || 'This shift could not be cancelled.'); else { setEditingId(null); await load() } }
+  const assignVolunteer = async (shiftId: string, profileId: string) => { if (!profileId) return; setAssigning(true); const { error: e } = await getSupabaseBrowserClient().rpc('coordinator_assign_volunteer', { p_shift_id: shiftId, p_profile_id: profileId }); setAssigning(false); if (e) setError(e.message || 'This volunteer could not be assigned.'); else await load() }
+  return <main className="min-h-full bg-altar-parchment text-altar-ink"><div className="mx-auto max-w-6xl px-6 pt-10 sm:px-10 lg:px-16"><div className="flex flex-col gap-4 border-b border-altar-sage/30 pb-6 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">The Altar Initiative · Private workspace</p><h1 className="mt-3 font-display text-4xl text-altar-teal">Coordinate the room</h1></div><nav aria-label="Coordinator workspace" className="flex flex-wrap gap-2">{(['overview', 'interests', 'schedule', ...(currentRole === 'admin' ? ['people'] as const : [])] as const).map((o) => <button className={`focus-ring rounded-sm px-3 py-2 text-sm font-semibold ${view === o ? 'bg-altar-teal text-altar-parchment' : 'border border-altar-teal text-altar-teal'}`} key={o} onClick={() => setView(o)} type="button">{o === 'overview' ? 'Overview' : o === 'interests' ? 'Serving interests' : o === 'schedule' ? 'Weekly coverage' : 'People & access'}</button>)}</nav></div>{error ? <p className="mt-5 border-l-2 border-altar-gold bg-white/50 p-4 text-sm" role="alert">{error}</p> : null}</div>
+    {view === 'overview' ? <div className="mx-auto max-w-6xl"><CoordinationOverview data={state.overview} isLoading={isLoading} onOpenSchedule={() => setView('schedule')} onReviewInterests={() => setView('interests')} /></div> : null}{view === 'interests' ? <div className="mx-auto max-w-6xl"><InterestReviewQueue items={state.interests} isLoading={isLoading} onOpenInterest={(id) => void review(id, 'reviewing')} onStartInvitation={sendInvitation} onMarkNotMovingForward={(id) => void review(id, 'declined')} /></div> : null}
+    {view === 'schedule' ? <><CoordinatorWeekCapacity days={state.days} weekLabel={formatWeekLabel(weekStart, new Date(weekEnd.getTime() - 86_400_000))} onCreateShift={() => setEditingId('create')} onSelectSlot={(slot) => setEditingId(slot.id)} /><div className="mx-auto max-w-6xl px-6 pb-14 sm:px-10 lg:px-16">{editingId ? <><ShiftEditor initialValues={editorValues} mode={editingId === 'create' ? 'create' : 'edit'} isSaving={isSaving} onCancel={() => setEditingId(null)} onSave={(values) => void saveShift(values)} />{selected ? <section className="mt-5 border-l-2 border-altar-teal bg-white/45 p-5"><h3 className="font-display text-2xl text-altar-teal">Assign coverage</h3><p className="mt-2 text-sm text-altar-ink/70">Assigned volunteers see this only in their own private schedule.</p><div className="mt-4 flex flex-wrap gap-3"><select aria-label="Volunteer to assign" className="rounded-sm border border-altar-sage/45 bg-white px-3 py-2 text-sm" defaultValue="" disabled={selected.status !== 'scheduled' || assigning} id={`assign-${selected.id}`}><option value="">Choose an approved volunteer</option>{state.volunteers.map((v) => <option key={v.id} value={v.id}>{v.display_name || v.email}</option>)}</select><button className="button-primary" disabled={selected.status !== 'scheduled' || assigning} onClick={() => { const input = document.getElementById(`assign-${selected.id}`) as HTMLSelectElement | null; if (input) void assignVolunteer(selected.id, input.value) }} type="button">{assigning ? 'Assigning…' : 'Assign volunteer'}</button>{selected.status === 'scheduled' ? <button className="focus-ring rounded-sm border border-red-800 px-4 py-2 text-sm font-semibold text-red-800" disabled={isSaving} onClick={() => void cancelShift(selected)} type="button">Cancel shift</button> : null}</div></section> : null}</> : null}</div></> : null}
+    {view === 'people' && currentRole === 'admin' ? <AdminPeopleManager currentProfileId={currentProfileId} profiles={state.profiles} onPromote={(id) => void promoteAdministrator(id)} /> : null}</main>
 }

@@ -8,6 +8,7 @@ import {
   ServeInterestForm,
   type ServeInterestValues,
   UpdatesSignup,
+  UpdateSubscriptionTokenPage,
   type UpdatesSignupValues,
 } from '../features/public'
 import { InvitationSignIn, PrivateAccessBoundary } from '../features/access'
@@ -17,6 +18,8 @@ import {
   requestInvitationMagicLink,
   submitServeInterest,
   subscribeToUpdates,
+  confirmUpdateSubscription,
+  unsubscribeFromUpdates,
 } from '../lib/supabase'
 
 const publicPaths = {
@@ -79,8 +82,10 @@ export function App() {
   }
 
   const subscribe = async (values: UpdatesSignupValues) => {
-    await subscribeToUpdates(getSupabaseBrowserClient(), { email: values.email })
+    await subscribeToUpdates(getSupabaseBrowserClient(), { email: values.email, website: values.website })
   }
+  const confirmUpdates = async (token: string) => confirmUpdateSubscription(getSupabaseBrowserClient(), token)
+  const unsubscribeUpdates = async (token: string) => unsubscribeFromUpdates(getSupabaseBrowserClient(), token)
 
   return (
     <AppShell>
@@ -90,6 +95,8 @@ export function App() {
         <Route path="calendar" element={<PublicCalendar />} />
         <Route path="serve" element={<ServeInterestForm onSubmitInterest={submitInterest} />} />
         <Route path="updates" element={<UpdatesSignup onSubscribe={subscribe} />} />
+        <Route path="updates/confirm" element={<UpdateSubscriptionTokenPage action={confirmUpdates} kind="confirm" />} />
+        <Route path="updates/unsubscribe" element={<UpdateSubscriptionTokenPage action={unsubscribeUpdates} kind="unsubscribe" />} />
         <Route path="access" element={<AccessRoute />} />
         <Route path="portal/*" element={<VolunteerPortalRoute />} />
         <Route path="coordinator/*" element={<CoordinatorRoute />} />

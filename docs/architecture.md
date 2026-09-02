@@ -71,7 +71,8 @@ Keep message content limited to scheduling and initiative communications. Do not
 
 ## Notification design
 
-- Record explicit email consent and an unsubscribe timestamp.
+- Public updates use double opt-in: store a hashed, expiring confirmation token and do not set `updates_opt_in` until its recipient confirms. Store only hashed unsubscribe tokens, and never let a direct public form re-enable an opted-out address.
+- Run the public update request, confirmation, and unsubscribe paths as narrow, rate-limited Edge Functions. Keep Resend credentials, source-rate-limit pepper, and token hashing server-side.
 - Use a job record with idempotency keys before attempting delivery, so scheduler retries cannot duplicate reminders. Resend accepts an idempotency key for email sends.
 - Store provider IDs and delivery status, not more message content than operationally necessary.
 - Send reminders according to configurable templates: assignment confirmation, one-week reminder, 24-hour reminder, unconfirmed shift alert, and coverage request.

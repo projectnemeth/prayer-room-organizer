@@ -1,9 +1,10 @@
-import type { InterestReviewQueueProps, InterestReviewStatus, ServeInterestReviewItem } from "./types";
+import { useState } from "react";
+import type { InterestInvitationResult, InterestReviewQueueProps, InterestReviewStatus, ServeInterestReviewItem } from "./types";
 
 const statusLabels: Record<InterestReviewStatus, string> = {
   new: "New interest",
   "in-conversation": "In conversation",
-  invited: "Invitation started",
+  invited: "Invitation sent",
   "not-moving-forward": "Not moving forward",
 };
 
@@ -54,6 +55,41 @@ export function InterestReviewQueue({
   onStartInvitation,
   onMarkNotMovingForward,
 }: InterestReviewQueueProps) {
+  const [invitationStates, setInvitationStates] = useState<Record<string, "sending" | "failed" | "sent" | "access-activated">>({});
+  const [invitationErrors, setInvitationErrors] = useState<Record<string, string>>({});
+
+  const startInvitation = async (item: ServeInterestReviewItem) => {
+    if (!onStartInvitation) return;
+
+    setInvitationStates((states) => ({ ...states, [item.id]: "sending" }));
+    setInvitationErrors((errors) => {
+      const next = { ...errors };
+      delete next[item.id];
+      return next;
+    });
+
+    try {
+      const result = await onStartInvitation(item.id) as InterestInvitationResult | void;
+      if (result?.outcome === "invitation-sent") {
+        setInvitationStates((states) => ({ ...states, [item.id]: "sent" }));
+      } else if (result?.outcome === "access-activated") {
+        setInvitationStates((states) => ({ ...states, [item.id]: "access-activated" }));
+      } else {
+        setInvitationStates((states) => {
+          const next = { ...states };
+          delete next[item.id];
+          return next;
+        });
+      }
+    } catch (error) {
+      setInvitationStates((states) => ({ ...states, [item.id]: "failed" }));
+      setInvitationErrors((errors) => ({
+        ...errors,
+        [item.id]: error instanceof Error ? error.message : "The invitation could not be sent. Please try again.",
+      }));
+    }
+  };
+
   return (
     <section aria-labelledby="interest-review-heading" className="bg-white/45 p-6 sm:p-8">
       <div className="flex flex-col gap-4 border-b border-altar-sage/30 pb-6 sm:flex-row sm:items-end sm:justify-between">
@@ -77,8 +113,12 @@ export function InterestReviewQueue({
         </div>
       ) : (
         <ul className="mt-6 space-y-4" aria-label="Serving interest responses">
-          {items.map((item) => (
-            <li className="border border-altar-sage/25 bg-altar-parchment/55 p-5" key={item.id}>
+          {items.map((item) => {
+            const invitationState = invitationStates[item.id];
+            const invitationError = invitationErrors[item.id];
+
+            return (
+              <li className="border border-altar-sage/25 bg-altar-parchment/55 p-5" key={item.id}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h3 className="font-display text-2xl text-altar-ink">{item.name}</h3>
@@ -90,15 +130,21 @@ export function InterestReviewQueue({
 
               <InterestDetails item={item} />
 
+              {invitationState === "sending" ? <p className="mt-5 text-sm font-semibold text-altar-teal" role="status">Sending private invitation…</p> : null}
+              {invitationState === "sent" ? <p className="mt-5 border-l-2 border-altar-gold bg-white/60 p-4 text-sm leading-6 text-altar-ink" role="status">Invitation sent to {item.email}. Their private portal access is ready once they use the email link.</p> : null}
+              {invitationState === "access-activated" ? <p className="mt-5 border-l-2 border-altar-gold bg-white/60 p-4 text-sm leading-6 text-altar-ink" role="status">This person already has a private account. Volunteer access is active; ask them to use the private sign-in page.</p> : null}
+              {invitationState === "failed" ? <p className="mt-5 border-l-2 border-altar-gold bg-white/60 p-4 text-sm leading-6 text-altar-ink" role="alert">{invitationError}</p> : null}
+
               {(onOpenInterest || onStartInvitation || onMarkNotMovingForward) ? (
                 <div className="mt-6 flex flex-wrap gap-3 border-t border-altar-sage/20 pt-5">
                   {onOpenInterest ? <button className="focus-ring rounded-sm border border-altar-teal px-4 py-2 text-sm font-semibold text-altar-teal transition-colors hover:bg-altar-stone/45" onClick={() => onOpenInterest(item.id)} type="button">Review details</button> : null}
-                  {onStartInvitation && item.status !== "invited" && item.status !== "not-moving-forward" ? <button className="button-primary" onClick={() => onStartInvitation(item.id)} type="button">Begin private invitation</button> : null}
+                  {onStartInvitation && item.status !== "invited" && item.status !== "not-moving-forward" ? <button className="button-primary" disabled={invitationState === "sending"} onClick={() => void startInvitation(item)} type="button">{invitationState === "sending" ? "Sending invitation…" : invitationState === "failed" ? "Try invitation again" : "Send private invitation"}</button> : null}
                   {onMarkNotMovingForward && item.status !== "not-moving-forward" ? <button className="focus-ring px-2 py-2 text-sm font-semibold text-altar-ink/70 underline decoration-altar-sage underline-offset-4 hover:text-altar-ink" onClick={() => onMarkNotMovingForward(item.id)} type="button">Not moving forward</button> : null}
                 </div>
               ) : null}
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </section>

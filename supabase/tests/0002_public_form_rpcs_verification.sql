@@ -23,10 +23,15 @@ begin
     raise exception 'the former anonymous insert policy must be removed';
   end if;
 
-  if not has_function_privilege('anon', 'public.submit_serve_interest(text, text, text, jsonb, jsonb, text)', 'EXECUTE')
-    or not has_function_privilege('anon', 'public.subscribe_to_updates(text, text)', 'EXECUTE')
-    or not has_function_privilege('anon', 'public.unsubscribe_from_updates(uuid)', 'EXECUTE') then
-    raise exception 'anon is missing a required public-form RPC grant';
+  if not has_function_privilege('anon', 'public.submit_serve_interest(text, text, text, jsonb, jsonb, text)', 'EXECUTE') then
+    raise exception 'anon is missing the required public interest-form RPC grant';
+  end if;
+
+  -- Updates moved to rate-limited Edge Functions with double opt-in. The old
+  -- direct RPCs must stay unavailable in a fully migrated database.
+  if has_function_privilege('anon', 'public.subscribe_to_updates(text, text)', 'EXECUTE')
+    or has_function_privilege('anon', 'public.unsubscribe_from_updates(uuid)', 'EXECUTE') then
+    raise exception 'anon must not directly alter update subscriptions';
   end if;
 
   if exists (
@@ -34,7 +39,7 @@ begin
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
-      and p.proname in ('submit_serve_interest', 'subscribe_to_updates', 'unsubscribe_from_updates')
+      and p.proname = 'submit_serve_interest'
       and (not p.prosecdef or coalesce(array_to_string(p.proconfig, ','), '') !~ 'search_path=pg_catalog, public, pg_temp')
   ) then
     raise exception 'public-form RPCs must be security definer functions with a fixed search_path';
@@ -70,21 +75,6 @@ begin
     null;
   end;
 
-  perform public.subscribe_to_updates('updates-verification@example.invalid');
-  select id, updates_unsubscribe_token into v_preference_id, v_token
-  from public.email_preferences
-  where email_normalized = 'updates-verification@example.invalid';
-  if v_preference_id is null or v_token is null then
-    raise exception 'subscription RPC did not create a tokenized preference';
-  end if;
-
-  perform public.unsubscribe_from_updates(v_token);
-  if exists (
-    select 1 from public.email_preferences
-    where id = v_preference_id and updates_opt_in
-  ) then
-    raise exception 'unsubscribe RPC did not opt the preference out';
-  end if;
 end;
 $$;
 

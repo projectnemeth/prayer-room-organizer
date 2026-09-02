@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { PublicCalendar } from './PublicCalendar'
+import { mockPublicGatherings } from './mock-data'
 
 describe('PublicCalendar', () => {
   it('presents the weekday Altar rhythm in a switchable calendar', () => {
-    render(<PublicCalendar />)
+    render(<PublicCalendar gatherings={mockPublicGatherings} />)
 
     expect(screen.getByRole('heading', { name: 'October 2026' })).toBeInTheDocument()
     expect(screen.getAllByText('Morning Altar').length).toBeGreaterThan(20)

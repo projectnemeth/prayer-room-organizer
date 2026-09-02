@@ -4,6 +4,7 @@ export type {
   CoordinationAttentionItem,
   CoordinationOverviewData,
   CoordinationOverviewProps,
+  InterestInvitationResult,
   InterestReviewQueueProps,
   InterestReviewStatus,
   ServeInterestReviewItem,

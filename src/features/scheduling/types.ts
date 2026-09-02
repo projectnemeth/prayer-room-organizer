@@ -43,3 +43,17 @@ export interface VolunteerAvailableSlotsProps {
   claimingSlotId?: string;
   onClaimSlot?: (slot: AvailableVolunteerSlot) => void;
 }
+
+export interface VolunteerAssignment {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  title: string;
+  locationLabel?: string;
+  instructions?: string;
+  status: "assigned" | "confirmed" | "absence_requested";
+}
+
+export interface VolunteerAssignmentsProps {
+  assignments: VolunteerAssignment[];
+}
