@@ -82,11 +82,12 @@ export interface VolunteerAssignment {
   title: string;
   locationLabel?: string;
   instructions?: string;
-  status: "assigned" | "confirmed" | "absence_requested";
+  status: "pending" | "assigned" | "confirmed" | "absence_requested";
   /** Coordinator-assigned roles for this specific prayer set. Empty array means no role designated yet. */
   roles?: ShiftRole[];
 }
 
 export interface VolunteerAssignmentsProps {
   assignments: VolunteerAssignment[];
+  onRespondToInvitation?: (assignmentId: string, response: "accepted" | "declined") => void;
 }

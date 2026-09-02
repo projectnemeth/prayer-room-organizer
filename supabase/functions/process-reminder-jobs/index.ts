@@ -42,6 +42,11 @@ function messageFor(templateKey: string, shift: Shift, portalUrl: string): { sub
   const when = formatWhen(shift.starts_at);
   const instruction = shift.volunteer_instructions?.trim();
   const template = {
+    assignment_request: {
+      subject: "A Prayer Room serving invitation · The Altar Initiative",
+      lead: "You have been invited to serve in the Prayer Room.",
+      prompt: "Please open your private schedule to accept or decline this invitation for",
+    },
     assignment_confirmation: {
       subject: "You are scheduled to serve · The Altar Initiative",
       lead: "Thank you for serving in the Prayer Room.",
@@ -173,7 +178,8 @@ Deno.serve(async (request) => {
         client.from("email_preferences").select("email, email_reminders_opt_in").eq("profile_id", job.recipient_profile_id).maybeSingle<{ email: string; email_reminders_opt_in: boolean }>(),
       ]);
       if (assignmentError || preferenceError) throw new Error("Unable to load current reminder delivery data.");
-      if (!assignment || !preference?.email_reminders_opt_in || !contextAllowsDelivery(job, assignment)) {
+      const isTransactionalInvitation = job.template_key === "assignment_request";
+      if (!assignment || !preference?.email || (!isTransactionalInvitation && !preference.email_reminders_opt_in) || !contextAllowsDelivery(job, assignment)) {
         await complete(client, job, workerId, "skipped", undefined, "The assignment or reminder preference is no longer eligible for delivery.");
         totals.skipped += 1;
         continue;
