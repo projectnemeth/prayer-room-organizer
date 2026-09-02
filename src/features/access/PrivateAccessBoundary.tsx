@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { PortalAccessDenied } from "../portal";
 import { getSupabaseBrowserClient, hasSupabaseBrowserConfig, signOutPrivateSession } from "../../lib/supabase";
+import { appPath } from "../../app/paths";
 
 export type PrivateProfileRole = "volunteer" | "coordinator" | "admin";
 
@@ -89,7 +90,7 @@ export function PrivateAccessBoundary({ children, requireCoordinator = false }: 
 
   if (access.kind === "loading") return <AccessLoadingState />;
   if (access.kind === "denied") {
-    return <PortalAccessDenied requestAccessLink={{ href: "/serve", label: "Share your interest" }} supportLink={{ href: "/access", label: "Sign in" }} />;
+    return <PortalAccessDenied requestAccessLink={{ href: appPath("/serve"), label: "Share your interest" }} supportLink={{ href: appPath("/access"), label: "Sign in" }} />;
   }
 
   const signOut = async () => {
@@ -97,7 +98,7 @@ export function PrivateAccessBoundary({ children, requireCoordinator = false }: 
     setSignOutError(null);
     try {
       await signOutPrivateSession(getSupabaseBrowserClient());
-      window.location.assign("/access");
+      window.location.assign(appPath("/access"));
     } catch (error) {
       setSignOutError(error instanceof Error ? error.message : "We could not sign you out on this device. Please try again.");
       setIsSigningOut(false);

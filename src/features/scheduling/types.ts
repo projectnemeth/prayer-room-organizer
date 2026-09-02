@@ -37,6 +37,8 @@ export interface CapacitySlot {
   label: string;
   capacity: number;
   assignedCount: number;
+  /** Invitations awaiting a response reserve capacity but are not confirmed coverage. */
+  pendingCount?: number;
   status?: "scheduled" | "cancelled" | "completed";
 }
 

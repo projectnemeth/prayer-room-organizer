@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { VolunteerAssignments, VolunteerAvailableSlots, type AvailableVolunteerSlot, type ShiftRole, type VolunteerAssignment } from '../scheduling'
 import { getSupabaseBrowserClient } from '../../lib/supabase'
 
-interface AvailableShiftRow { id: string; starts_at: string; ends_at: string; required_volunteers: number; assigned_count: number; open_places: number; title: string; location_label: string | null; volunteer_instructions: string | null }
+interface AvailableShiftRow { id: string; starts_at: string; ends_at: string; required_volunteers: number; assigned_count: number; reserved_count: number; open_places: number; title: string; location_label: string | null; volunteer_instructions: string | null }
 interface AssignmentRow { assignment_id: string; shift_id: string; starts_at: string; ends_at: string; title: string; location_label: string | null; volunteer_instructions: string | null; assignment_status: 'pending' | 'assigned' | 'confirmed' | 'absence_requested'; roles: ShiftRole[] | null }
 interface VolunteerScheduleProps { volunteerName: string }
 
@@ -14,7 +14,7 @@ export function VolunteerSchedule({ volunteerName }: VolunteerScheduleProps) {
     if (availableError || assignedError) { setError('Your private schedule could not be loaded. Please refresh and try again.'); return }
     const heldShiftIds = new Set(((assigned ?? []) as AssignmentRow[]).map((assignment) => assignment.shift_id))
     setAssignments(((assigned ?? []) as AssignmentRow[]).map((assignment) => ({ id: assignment.assignment_id, startsAt: assignment.starts_at, endsAt: assignment.ends_at, title: assignment.title, locationLabel: assignment.location_label ?? undefined, instructions: assignment.volunteer_instructions ?? undefined, status: assignment.assignment_status, roles: assignment.roles ?? [] })))
-    setSlots(((available ?? []) as AvailableShiftRow[]).filter((shift) => !heldShiftIds.has(shift.id)).map((shift) => ({ id: shift.id, startsAt: shift.starts_at, endsAt: shift.ends_at, label: shift.title, locationLabel: shift.location_label ?? undefined, focusTitle: shift.volunteer_instructions ?? undefined, capacity: shift.required_volunteers, assignedCount: Number(shift.assigned_count) })))
+    setSlots(((available ?? []) as AvailableShiftRow[]).filter((shift) => !heldShiftIds.has(shift.id)).map((shift) => ({ id: shift.id, startsAt: shift.starts_at, endsAt: shift.ends_at, label: shift.title, locationLabel: shift.location_label ?? undefined, focusTitle: shift.volunteer_instructions ?? undefined, capacity: shift.required_volunteers, assignedCount: Number(shift.reserved_count) })))
   }, [])
   useEffect(() => { const timer = window.setTimeout(() => { void load() }, 0); return () => window.clearTimeout(timer) }, [load])
   const claim = async (slot: AvailableVolunteerSlot) => { setClaimingSlotId(slot.id); setError(null); const { error: claimError } = await getSupabaseBrowserClient().rpc('claim_open_shift', { p_shift_id: slot.id }); setClaimingSlotId(undefined); if (claimError) { setError('This time is no longer available. Please choose another open shift.'); await load(); return }; await load() }

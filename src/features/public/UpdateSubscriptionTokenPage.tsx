@@ -27,7 +27,7 @@ export function UpdateSubscriptionTokenPage({ action, kind }: UpdateSubscription
       error: ["We couldn’t confirm this right now", "Please try the link again in a moment, or request a new confirmation email."],
     }
     : {
-      success: ["You’re unsubscribed", "You will no longer receive Altar Initiative email updates."],
+      success: ["Your unsubscribe request was processed", "If this link was active, you will no longer receive Altar Initiative email updates."],
       expired: ["This unsubscribe link is no longer active", "You can safely close this page."],
       error: ["We couldn’t process this right now", "Please try the link again in a moment."],
     };

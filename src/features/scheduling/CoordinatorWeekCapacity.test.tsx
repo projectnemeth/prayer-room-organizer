@@ -32,4 +32,30 @@ describe('CoordinatorWeekCapacity', () => {
     fireEvent.click(nextBtn)
     expect(onNextWeek).toHaveBeenCalledTimes(1)
   })
+
+  it('counts a pending invitation as reserved capacity without calling it covered', () => {
+    render(
+      <CoordinatorWeekCapacity
+        weekLabel="Oct 4–Oct 10, 2026"
+        days={[{
+          id: '2026-10-04',
+          label: 'Sun',
+          dateLabel: 'Oct 4',
+          slots: [{
+            id: 'shift-1',
+            startsAt: '2026-10-04T18:00:00Z',
+            endsAt: '2026-10-04T19:00:00Z',
+            label: 'Evening Altar',
+            capacity: 2,
+            assignedCount: 0,
+            pendingCount: 1,
+          }],
+        }]}
+      />,
+    )
+
+    expect(screen.getByText('0 of 2 places covered; 1 invitation pending')).toBeInTheDocument()
+    expect(screen.getByText('1 invitation pending')).toBeInTheDocument()
+    expect(screen.getByText('Open places').parentElement).toHaveTextContent('Open places1')
+  })
 })

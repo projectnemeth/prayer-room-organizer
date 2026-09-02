@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { AppShell } from './AppShell'
 import { PlaceholderPage } from './PlaceholderPage'
+import { appUrl } from './paths'
 import {
   DailyRhythm,
   PublicCalendar,
@@ -68,7 +69,7 @@ function AccessRoute() {
     await requestInvitationMagicLink(
       getSupabaseBrowserClient(),
       email,
-      `${window.location.origin}/portal`,
+      appUrl('/portal'),
     )
   }
 

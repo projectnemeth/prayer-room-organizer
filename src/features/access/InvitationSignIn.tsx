@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { PrivateAccessError } from '../../lib/supabase'
+import { appPath } from '../../app/paths'
 
 interface InvitationSignInProps {
   onRequestMagicLink: (email: string) => Promise<void>
@@ -63,7 +64,7 @@ export function InvitationSignIn({ onRequestMagicLink }: InvitationSignInProps) 
           </form>
         )}
 
-        <p className="mt-7 text-sm leading-6 text-altar-sage">Want to serve but haven’t been invited? <a className="focus-ring font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" href="/serve">Share your interest first.</a></p>
+        <p className="mt-7 text-sm leading-6 text-altar-sage">Want to serve but haven’t been invited? <a className="focus-ring font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" href={appPath('/serve')}>Share your interest first.</a></p>
       </section>
     </main>
   )

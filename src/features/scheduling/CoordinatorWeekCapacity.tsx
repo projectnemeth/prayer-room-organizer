@@ -12,7 +12,13 @@ function formatTime(value: string) {
 
 function getCoverageLabel(slot: CapacitySlot) {
   const assignedCount = Math.min(slot.assignedCount, slot.capacity);
-  return `${assignedCount} of ${slot.capacity} places covered`;
+  const pendingCount = Math.min(slot.pendingCount ?? 0, Math.max(slot.capacity - assignedCount, 0));
+  const confirmed = `${assignedCount} of ${slot.capacity} places covered`;
+  return pendingCount ? `${confirmed}; ${pendingCount} invitation${pendingCount === 1 ? "" : "s"} pending` : confirmed;
+}
+
+function reservedPlaces(slot: CapacitySlot) {
+  return Math.min(slot.capacity, slot.assignedCount + (slot.pendingCount ?? 0));
 }
 
 /**
@@ -31,6 +37,7 @@ export function CoordinatorWeekCapacity({
   const scheduledSlots = days.flatMap((day) => day.slots).filter((slot) => slot.status !== "cancelled");
   const capacity = scheduledSlots.reduce((total, slot) => total + slot.capacity, 0);
   const assigned = scheduledSlots.reduce((total, slot) => total + Math.min(slot.assignedCount, slot.capacity), 0);
+  const reserved = scheduledSlots.reduce((total, slot) => total + reservedPlaces(slot), 0);
   const coveragePercent = capacity === 0 ? 0 : Math.round((assigned / capacity) * 100);
 
   return (
@@ -93,8 +100,8 @@ export function CoordinatorWeekCapacity({
           </div>
           <div className="border-t-2 border-altar-gold bg-white/50 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-altar-sage">Open places</p>
-            <p className="mt-2 font-display text-4xl text-altar-teal">{Math.max(capacity - assigned, 0)}</p>
-            <p className="mt-2 text-sm text-altar-ink/70">Across {scheduledSlots.length} scheduled shifts</p>
+            <p className="mt-2 font-display text-4xl text-altar-teal">{Math.max(capacity - reserved, 0)}</p>
+            <p className="mt-2 text-sm text-altar-ink/70">{Math.max(reserved - assigned, 0)} invitation{reserved - assigned === 1 ? "" : "s"} pending</p>
           </div>
           <div className="border-t-2 border-altar-gold bg-white/50 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-altar-sage">Privacy</p>
@@ -118,7 +125,7 @@ export function CoordinatorWeekCapacity({
                   <ul className="mt-4 space-y-3">
                     {day.slots.map((slot) => {
                       const isCancelled = slot.status === "cancelled";
-                      const coverage = slot.capacity === 0 ? 0 : Math.min(100, Math.round((slot.assignedCount / slot.capacity) * 100));
+                      const coverage = slot.capacity === 0 ? 0 : Math.min(100, Math.round((reservedPlaces(slot) / slot.capacity) * 100));
                       return (
                         <li key={slot.id}>
                           <button
