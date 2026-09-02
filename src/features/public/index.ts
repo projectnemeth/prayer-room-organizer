@@ -4,5 +4,17 @@ export { PublicHome } from "./PublicHome";
 export { ServeInterestForm } from "./ServeInterestForm";
 export { UpdatesSignup } from "./UpdatesSignup";
 export { UpdateSubscriptionTokenPage } from "./UpdateSubscriptionTokenPage";
-export { mockPrayerFocus, mockPublicGatherings } from "./mock-data";
-export type { PrayerFocus, PublicGathering, ServeInterestValues, UpdatesSignupValues } from "./types";
+export {
+  mockPrayerFocus,
+  mockPublicGatherings,
+  weeklyPrayerFocusSchedule,
+  getPrayerFocusForDayOfWeek,
+  getTodayPrayerFocus,
+} from "./mock-data";
+export type {
+  DayOfWeekFocus,
+  PrayerFocus,
+  PublicGathering,
+  ServeInterestValues,
+  UpdatesSignupValues,
+} from "./types";

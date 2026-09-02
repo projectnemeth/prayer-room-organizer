@@ -25,6 +25,18 @@ export interface PrayerFocus {
   resourceUrl?: string;
 }
 
+export interface DayOfWeekFocus {
+  dayOfWeek: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  dayName: string;
+  shortDay: string;
+  focusTitle: string;
+  summary: string;
+  scriptureReference: string;
+  scriptureText: string;
+  resourceLabel?: string;
+  resourceUrl?: string;
+}
+
 export interface ServeInterestValues {
   name: string;
   email: string;

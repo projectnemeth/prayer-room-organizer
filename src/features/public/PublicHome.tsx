@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { PrayerFocus, PublicGathering } from "./types";
+import { getTodayPrayerFocus } from "./mock-data";
 import { getSupabaseBrowserClient } from "../../lib/supabase";
 
 interface PublicHomeProps {
@@ -62,8 +63,13 @@ export function PublicHome({
         if (!active) return;
         setGatherings(((eventData ?? []) as PublicEventRow[]).map(mapGathering));
         const row = (focusData ?? []) as PublicFocusRow[];
-        setFocus(row[0] ? mapFocus(row[0]) : undefined);
-      } catch { if (active) setLoadError(true); }
+        setFocus(row[0] ? mapFocus(row[0]) : getTodayPrayerFocus());
+      } catch {
+        if (active) {
+          setLoadError(true);
+          setFocus(getTodayPrayerFocus());
+        }
+      }
     };
     void load();
     return () => { active = false; };

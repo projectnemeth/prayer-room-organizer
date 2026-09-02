@@ -1,4 +1,4 @@
-import { mockPrayerFocus } from "./mock-data";
+import { getTodayPrayerFocus, weeklyPrayerFocusSchedule } from "./mock-data";
 import type { PrayerFocus } from "./types";
 
 interface DailyRhythmProps {
@@ -26,7 +26,10 @@ const rhythmMoments = [
   },
 ];
 
-export function DailyRhythm({ focus = mockPrayerFocus }: DailyRhythmProps) {
+export function DailyRhythm({ focus }: DailyRhythmProps) {
+  const currentFocus = focus ?? getTodayPrayerFocus();
+  const currentDayOfWeek = new Date().getDay();
+
   return (
     <main className="min-h-full bg-[#F5F1E8] px-6 py-14 text-[#1F2421] sm:px-10 lg:px-16">
       <div className="mx-auto max-w-5xl">
@@ -51,19 +54,65 @@ export function DailyRhythm({ focus = mockPrayerFocus }: DailyRhythmProps) {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D9D3C6]">Today&apos;s prayer focus</p>
           <div className="mt-5 grid gap-8 md:grid-cols-[1fr_1.35fr]">
             <div>
-              <h2 id="today-focus" className="font-serif text-3xl">{focus.title}</h2>
-              <p className="mt-4 leading-7 text-[#F5F1E8]/85">{focus.summary}</p>
+              <h2 id="today-focus" className="font-serif text-3xl">{currentFocus.title}</h2>
+              <p className="mt-4 leading-7 text-[#F5F1E8]/85">{currentFocus.summary}</p>
             </div>
             <blockquote className="border-l-2 border-[#B99A61] pl-5">
-              <p className="font-serif text-xl leading-8">“{focus.scriptureText}”</p>
-              <cite className="mt-4 block text-sm font-semibold not-italic text-[#D9D3C6]">{focus.scriptureReference}</cite>
+              <p className="font-serif text-xl leading-8">“{currentFocus.scriptureText}”</p>
+              <cite className="mt-4 block text-sm font-semibold not-italic text-[#D9D3C6]">{currentFocus.scriptureReference}</cite>
             </blockquote>
           </div>
-          {focus.resourceUrl && focus.resourceLabel ? (
-            <a className="mt-7 inline-block text-sm font-semibold underline decoration-[#B99A61] decoration-2 underline-offset-4 focus:outline-none focus:ring-2 focus:ring-white" href={focus.resourceUrl}>
-              {focus.resourceLabel}
+          {currentFocus.resourceUrl && currentFocus.resourceLabel ? (
+            <a className="mt-7 inline-block text-sm font-semibold underline decoration-[#B99A61] decoration-2 underline-offset-4 focus:outline-none focus:ring-2 focus:ring-white" href={currentFocus.resourceUrl}>
+              {currentFocus.resourceLabel}
             </a>
           ) : null}
+        </section>
+
+        <section aria-labelledby="weekly-focus-heading" className="mt-14">
+          <div className="border-b border-[#D9D3C6] pb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6F8580]">Weekly focus rhythm</p>
+            <h2 id="weekly-focus-heading" className="mt-2 font-serif text-3xl">Seven days of focused intercession</h2>
+            <p className="mt-3 text-[#1F2421]/80">
+              Each day of the week unites our community around a specific dimension of God’s kingdom and church.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {weeklyPrayerFocusSchedule.map((item) => {
+              const isToday = item.dayOfWeek === currentDayOfWeek;
+              return (
+                <article
+                  key={item.shortDay}
+                  className={`border-t-2 p-6 transition ${
+                    isToday
+                      ? "border-[#B99A61] bg-[#3F5F5B]/10 shadow-sm ring-1 ring-[#3F5F5B]/20"
+                      : "border-[#6F8580]/40 bg-white/45"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#3F5F5B]">
+                      {item.shortDay} · {item.dayName}
+                    </span>
+                    {isToday ? (
+                      <span className="rounded-full bg-[#B99A61] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#1F2421]">
+                        Today
+                      </span>
+                    ) : null}
+                  </div>
+                  <h3 className="mt-3 font-serif text-xl font-medium text-[#1F2421]">
+                    {item.focusTitle}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-[#1F2421]/80">
+                    {item.summary}
+                  </p>
+                  <p className="mt-4 text-xs font-semibold text-[#6F8580]">
+                    {item.scriptureReference}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
         </section>
       </div>
     </main>
