@@ -1,4 +1,4 @@
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { AppShell } from './AppShell'
 import { PlaceholderPage } from './PlaceholderPage'
 import {
@@ -38,7 +38,13 @@ function PublicHomeRoute() {
 function VolunteerPortalRoute() {
   return (
     <PrivateAccessBoundary>
-      {(profile) => <VolunteerSchedule volunteerName={profile.displayName} />}
+      {(profile) =>
+        profile.role === 'admin' || profile.role === 'coordinator' ? (
+          <Navigate to="/coordinator" replace />
+        ) : (
+          <VolunteerSchedule volunteerName={profile.displayName} />
+        )
+      }
     </PrivateAccessBoundary>
   )
 }
