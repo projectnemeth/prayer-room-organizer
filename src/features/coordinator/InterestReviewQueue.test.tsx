@@ -43,4 +43,17 @@ describe('InterestReviewQueue', () => {
     expect(onOpenInterest).toHaveBeenCalledWith(interest.id)
     expect(screen.queryByRole('button', { name: 'Review details' })).not.toBeInTheDocument()
   })
+
+  it('separates completed approvals and closed requests from the review queue', () => {
+    render(<InterestReviewQueue items={[
+      interest,
+      { ...interest, id: 'approved-interest', name: 'Approved person', status: 'invited' },
+      { ...interest, id: 'closed-interest', name: 'Closed person', status: 'not-moving-forward' },
+    ]} />)
+
+    expect(screen.getByText('1 to review')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Open serving interests' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Approved interest requests' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Not moving forward' })).toBeInTheDocument()
+  })
 })

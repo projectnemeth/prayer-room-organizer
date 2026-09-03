@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import type { InterestInvitationResult, InterestReviewQueueProps, InterestReviewStatus, ServeInterestReviewItem } from "./types";
 
 const statusLabels: Record<InterestReviewStatus, string> = {
@@ -13,6 +13,29 @@ const statusClasses: Record<InterestReviewStatus, string> = {
   "in-conversation": "bg-altar-teal/10 text-altar-teal",
   invited: "bg-altar-sage/15 text-altar-ink",
   "not-moving-forward": "bg-altar-stone/65 text-altar-ink/70",
+};
+
+type InterestSection = "review" | "approved" | "not-moving-forward";
+
+function interestSection(status: InterestReviewStatus): InterestSection {
+  if (status === "invited") return "approved";
+  if (status === "not-moving-forward") return "not-moving-forward";
+  return "review";
+}
+
+const sectionContent: Record<InterestSection, { title: string; description: string }> = {
+  review: {
+    title: "Open serving interests",
+    description: "These responses still need a follow-up or invitation decision.",
+  },
+  approved: {
+    title: "Approved interest requests",
+    description: "These people already have approved access or an invitation has been sent.",
+  },
+  "not-moving-forward": {
+    title: "Not moving forward",
+    description: "These requests are retained here for context and are not active review work.",
+  },
 };
 
 function formatSubmittedAt(value: string) {
@@ -57,6 +80,10 @@ export function InterestReviewQueue({
 }: InterestReviewQueueProps) {
   const [invitationStates, setInvitationStates] = useState<Record<string, "sending" | "failed" | "sent" | "access-activated">>({});
   const [invitationErrors, setInvitationErrors] = useState<Record<string, string>>({});
+  const reviewItems = items.filter((item) => interestSection(item.status) === "review");
+  const approvedItems = items.filter((item) => interestSection(item.status) === "approved");
+  const notMovingForwardItems = items.filter((item) => interestSection(item.status) === "not-moving-forward");
+  const orderedItems = [...reviewItems, ...approvedItems, ...notMovingForwardItems];
 
   const startInvitation = async (item: ServeInterestReviewItem) => {
     if (!onStartInvitation) return;
@@ -98,7 +125,7 @@ export function InterestReviewQueue({
           <h2 id="interest-review-heading" className="mt-3 font-display text-3xl text-altar-ink">Serving interest review</h2>
           <p className="mt-3 max-w-2xl leading-7 text-altar-ink/75">Review each response before beginning an invitation conversation. A public interest form never grants portal access or reserves a volunteer spot.</p>
         </div>
-        <p className="rounded-full bg-altar-stone/55 px-3 py-1.5 text-sm font-semibold text-altar-ink">{isLoading ? "Loading…" : `${items.length} to review`}</p>
+        <p className="rounded-full bg-altar-stone/55 px-3 py-1.5 text-sm font-semibold text-altar-ink">{isLoading ? "Loading…" : `${reviewItems.length} to review`}</p>
       </div>
 
       {isLoading ? (
@@ -113,11 +140,21 @@ export function InterestReviewQueue({
         </div>
       ) : (
         <ul className="mt-6 space-y-4" aria-label="Serving interest responses">
-          {items.map((item) => {
+          {orderedItems.map((item, index) => {
             const invitationState = invitationStates[item.id];
             const invitationError = invitationErrors[item.id];
+            const section = interestSection(item.status);
+            const previousSection = index === 0 ? undefined : interestSection(orderedItems[index - 1].status);
+            const isFirstInSection = section !== previousSection;
+            const hasActions = Boolean(
+              (onOpenInterest && item.status === "new")
+              || (onStartInvitation && item.status !== "invited" && item.status !== "not-moving-forward")
+              || (onMarkNotMovingForward && item.status !== "not-moving-forward"),
+            );
 
             return (
+              <Fragment key={item.id}>
+              {isFirstInSection ? <li className="border-l-2 border-altar-teal bg-white/35 p-5"><h3 className="font-display text-2xl text-altar-teal">{sectionContent[section].title}</h3><p className="mt-2 text-sm leading-6 text-altar-ink/75">{sectionContent[section].description}</p></li> : null}
               <li className="border border-altar-sage/25 bg-altar-parchment/55 p-5" key={item.id}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -135,7 +172,7 @@ export function InterestReviewQueue({
               {invitationState === "access-activated" ? <p className="mt-5 border-l-2 border-altar-gold bg-white/60 p-4 text-sm leading-6 text-altar-ink" role="status">This person already has private access. Their serving interest is marked approved; ask them to use the private sign-in page.</p> : null}
               {invitationState === "failed" ? <p className="mt-5 border-l-2 border-altar-gold bg-white/60 p-4 text-sm leading-6 text-altar-ink" role="alert">{invitationError}</p> : null}
 
-              {(onOpenInterest || onStartInvitation || onMarkNotMovingForward) ? (
+              {hasActions ? (
                 <div className="mt-6 flex flex-wrap gap-3 border-t border-altar-sage/20 pt-5">
                   {onOpenInterest && item.status === "new" ? <button className="focus-ring rounded-sm border border-altar-teal px-4 py-2 text-sm font-semibold text-altar-teal transition-colors hover:bg-altar-stone/45" onClick={() => onOpenInterest(item.id)} type="button">Mark as in conversation</button> : null}
                   {onStartInvitation && item.status !== "invited" && item.status !== "not-moving-forward" ? <button className="button-primary" disabled={invitationState === "sending"} onClick={() => void startInvitation(item)} type="button">{invitationState === "sending" ? "Sending invitation…" : invitationState === "failed" ? "Try invitation again" : "Send private invitation"}</button> : null}
@@ -143,6 +180,7 @@ export function InterestReviewQueue({
                 </div>
               ) : null}
             </li>
+            </Fragment>
             );
           })}
         </ul>
