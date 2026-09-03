@@ -58,11 +58,11 @@ Deno.serve(async (request) => {
   const { data: userData, error: userError } = await callerClient.auth.getUser();
   if (userError || !userData.user) return respond({ code: "unauthorized" }, 401);
 
-  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
   const callerId = userData.user.id;
-  const { data: caller, error: callerError } = await adminClient
+  // Read the caller through their authenticated session. This is allowed by the
+  // profile's own-row policy and avoids reporting a server-client issue as a
+  // mistaken role denial.
+  const { data: caller, error: callerError } = await callerClient
     .from("profiles")
     .select("id, role, status")
     .eq("id", callerId)
@@ -71,6 +71,10 @@ Deno.serve(async (request) => {
   if (callerError || !canSendVolunteerInvitation(caller)) {
     return respond({ code: "forbidden" }, 403);
   }
+
+  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 
   let interest: { id: string; name: string; email: string; status: string } | null = null;
   if (!directInvite) {
