@@ -167,7 +167,7 @@ export function InterestReviewQueue({
 
               <InterestDetails item={item} />
 
-              {invitationState === "sending" ? <p className="mt-5 text-sm font-semibold text-altar-teal" role="status">Sending private invitation…</p> : null}
+              {invitationState === "sending" ? <p className="mt-5 text-sm font-semibold text-altar-teal" role="status">Approving volunteer access…</p> : null}
               {invitationState === "sent" ? <p className="mt-5 border-l-2 border-altar-gold bg-white/60 p-4 text-sm leading-6 text-altar-ink" role="status">Invitation sent to {item.email}. Their private portal access is ready once they use the email link.</p> : null}
               {invitationState === "access-activated" ? <p className="mt-5 border-l-2 border-altar-gold bg-white/60 p-4 text-sm leading-6 text-altar-ink" role="status">This person already has private access. Their serving interest is marked approved; ask them to use the private sign-in page.</p> : null}
               {invitationState === "failed" ? <p className="mt-5 border-l-2 border-altar-gold bg-white/60 p-4 text-sm leading-6 text-altar-ink" role="alert">{invitationError}</p> : null}
@@ -175,7 +175,7 @@ export function InterestReviewQueue({
               {hasActions ? (
                 <div className="mt-6 flex flex-wrap gap-3 border-t border-altar-sage/20 pt-5">
                   {onOpenInterest && item.status === "new" ? <button className="focus-ring rounded-sm border border-altar-teal px-4 py-2 text-sm font-semibold text-altar-teal transition-colors hover:bg-altar-stone/45" onClick={() => onOpenInterest(item.id)} type="button">Mark as in conversation</button> : null}
-                  {onStartInvitation && item.status !== "invited" && item.status !== "not-moving-forward" ? <button className="button-primary" disabled={invitationState === "sending"} onClick={() => void startInvitation(item)} type="button">{invitationState === "sending" ? "Sending invitation…" : invitationState === "failed" ? "Try invitation again" : "Send private invitation"}</button> : null}
+                  {onStartInvitation && item.status !== "invited" && item.status !== "not-moving-forward" ? <button className="button-primary" disabled={invitationState === "sending"} onClick={() => void startInvitation(item)} type="button">{invitationState === "sending" ? "Approving volunteer…" : invitationState === "failed" ? "Try approval again" : "Approve as volunteer"}</button> : null}
                   {onMarkNotMovingForward && item.status !== "not-moving-forward" ? <button className="focus-ring px-2 py-2 text-sm font-semibold text-altar-ink/70 underline decoration-altar-sage underline-offset-4 hover:text-altar-ink" onClick={() => onMarkNotMovingForward(item.id)} type="button">Not moving forward</button> : null}
                 </div>
               ) : null}

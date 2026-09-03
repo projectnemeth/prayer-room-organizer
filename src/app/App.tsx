@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { AppShell } from './AppShell'
 import { PlaceholderPage } from './PlaceholderPage'
@@ -16,6 +17,7 @@ import { InvitationSignIn, PrivateAccessBoundary } from '../features/access'
 import { CoordinatorWorkspace, VolunteerSchedule } from '../features/private-workspace'
 import {
   getSupabaseBrowserClient,
+  hasSupabaseBrowserConfig,
   requestInvitationMagicLink,
   submitServeInterest,
   subscribeToUpdates,
@@ -65,6 +67,32 @@ function CoordinatorRoute() {
 }
 
 function AccessRoute() {
+  const [hasSession, setHasSession] = useState(false)
+
+  // Supabase uses the configured Site URL whenever a redirect target has not
+  // been allow-listed. Keeping this callback handling here means a valid email
+  // link that returns to /access still proceeds into the protected portal,
+  // rather than presenting the sign-in form again.
+  useEffect(() => {
+    if (!hasSupabaseBrowserConfig(import.meta.env)) return
+
+    const client = getSupabaseBrowserClient()
+    let mounted = true
+
+    void client.auth.getSession().then(({ data }) => {
+      if (mounted && data.session) setHasSession(true)
+    })
+
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+      if (mounted && session) setHasSession(true)
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
   const requestMagicLink = async (email: string) => {
     await requestInvitationMagicLink(
       getSupabaseBrowserClient(),
@@ -72,6 +100,8 @@ function AccessRoute() {
       appUrl('/portal'),
     )
   }
+
+  if (hasSession) return <Navigate to="/portal" replace />
 
   return <InvitationSignIn onRequestMagicLink={requestMagicLink} />
 }

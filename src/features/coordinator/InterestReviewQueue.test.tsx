@@ -17,9 +17,9 @@ describe('InterestReviewQueue', () => {
     }))
     render(<InterestReviewQueue items={[interest]} onStartInvitation={onStartInvitation} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Send private invitation' }))
-    expect(screen.getByRole('status')).toHaveTextContent('Sending private invitation')
-    expect(screen.getByRole('button', { name: 'Sending invitation…' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Approve as volunteer' }))
+    expect(screen.getByRole('status')).toHaveTextContent('Approving volunteer access')
+    expect(screen.getByRole('button', { name: 'Approving volunteer…' })).toBeDisabled()
 
     resolveInvitation?.({ outcome: 'invitation-sent', email: interest.email })
     expect(await screen.findByText('Invitation sent to mara@example.org. Their private portal access is ready once they use the email link.')).toBeInTheDocument()
@@ -30,9 +30,9 @@ describe('InterestReviewQueue', () => {
     const onStartInvitation = vi.fn().mockRejectedValue(new Error('The invitation could not be sent. Check the email provider and try again.'))
     render(<InterestReviewQueue items={[interest]} onStartInvitation={onStartInvitation} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Send private invitation' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Approve as volunteer' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Check the email provider')
-    expect(screen.getByRole('button', { name: 'Try invitation again' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Try approval again' })).toBeEnabled()
   })
 
   it('labels the already-visible review action accurately', () => {

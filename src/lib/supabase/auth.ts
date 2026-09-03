@@ -70,7 +70,7 @@ function messageForInvitationError(payload: unknown): VolunteerInvitationError {
     forbidden: 'Your current role cannot send volunteer invitations.',
     unauthorized: 'Your session has ended. Sign in again before sending an invitation.',
     'auth-account-exists': 'This person already has a private account. Their access was not changed; ask them to use the private sign-in page.',
-    'profile-activation-failed': 'The invitation may have been sent, but volunteer access needs attention. Check People & access before asking them to sign in.',
+    'profile-activation-failed': 'The invitation email was sent, but approval did not finish. Choose “Try approval again” to complete access before asking them to sign in.',
     'email-delivery-failed': 'The invitation could not be sent. Check the email provider and try again.',
   }
 

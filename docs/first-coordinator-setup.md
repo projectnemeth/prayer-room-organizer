@@ -4,7 +4,7 @@ The public app must never create volunteers or coordinators. Establish the first
 
 ## One-time setup
 
-1. In **Supabase → Authentication → URL Configuration**, set the production site URL and allow its `/portal` callback URL. For local testing, also allow `http://127.0.0.1:5173/portal`.
+1. In **Supabase → Authentication → URL Configuration**, set **Site URL** to `https://altar.lighthouseprayerroom.org` (not `/access`) and add `https://altar.lighthouseprayerroom.org/portal` to **Redirect URLs**. For local testing, also add `http://127.0.0.1:5173/portal`. Supabase silently falls back to Site URL if `/portal` is not allow-listed, which otherwise looks like a repeated sign-in request.
 2. Confirm the Email provider is enabled in **Authentication → Providers**.
 3. In **Authentication → Users**, create or invite the first coordinator with their real email address. The database trigger automatically creates a matching `profiles` record with the safe default of `prospect` / `invited`.
 4. In **SQL Editor**, find that new profile by email, review the result, then promote exactly that account. Replace the placeholder only after verifying the selected row:

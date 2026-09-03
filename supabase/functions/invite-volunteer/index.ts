@@ -25,6 +25,36 @@ function isUuid(value: unknown): value is string {
 }
 
 /**
+ * An Auth invitation normally creates this row through the auth.users trigger.
+ * Upserting makes approval resilient if that trigger is delayed or a previous
+ * partial invitation left the profile absent. Checking the returned row also
+ * prevents an empty profile update from looking like successful access.
+ */
+async function activateVolunteerProfile(
+  adminClient: ReturnType<typeof createClient>,
+  values: { id: string; name: string; email: string; role: string; approvedBy: string },
+) {
+  const { data, error } = await adminClient
+    .from("profiles")
+    .upsert({
+      id: values.id,
+      display_name: values.name,
+      email: values.email,
+      role: values.role,
+      status: "active",
+      approved_at: new Date().toISOString(),
+      approved_by: values.approvedBy,
+    }, { onConflict: "id" })
+    .select("id, role, status")
+    .maybeSingle();
+
+  return !error
+    && data?.id === values.id
+    && data.role === values.role
+    && data.status === "active";
+}
+
+/**
  * Creates a private Auth invitation only after independently verifying that the
  * requester is an active coordinator or administrator. The service-role key
  * never leaves this function and the browser cannot choose the role, email,
@@ -120,18 +150,14 @@ Deno.serve(async (request) => {
   }
 
   if (existingProfile) {
-    const profileUpdate: Record<string, unknown> = {
-      status: "active",
-      approved_at: new Date().toISOString(),
-      approved_by: callerId,
-    };
-    if (existingProfile.role === "prospect") profileUpdate.role = "volunteer";
-
-    const { error: activateError } = await adminClient
-      .from("profiles")
-      .update(profileUpdate)
-      .eq("id", existingProfile.id);
-    if (activateError) return respond({ code: "profile-activation-failed" }, 500);
+    const activated = await activateVolunteerProfile(adminClient, {
+      id: existingProfile.id,
+      name,
+      email,
+      role: existingProfile.role === "prospect" ? "volunteer" : existingProfile.role,
+      approvedBy: callerId,
+    });
+    if (!activated) return respond({ code: "profile-activation-failed" }, 500);
 
     const { error: reviewError } = await adminClient
       .from("interest_submissions")
@@ -161,16 +187,14 @@ Deno.serve(async (request) => {
     return respond({ code: "email-delivery-failed" }, 502);
   }
 
-  const { error: activationError } = await adminClient
-    .from("profiles")
-    .update({
-      role: "volunteer",
-      status: "active",
-      approved_at: new Date().toISOString(),
-      approved_by: callerId,
-    })
-    .eq("id", invitation.user.id);
-  if (activationError) return respond({ code: "profile-activation-failed" }, 500);
+  const activated = await activateVolunteerProfile(adminClient, {
+    id: invitation.user.id,
+    name,
+    email,
+    role: "volunteer",
+    approvedBy: callerId,
+  });
+  if (!activated) return respond({ code: "profile-activation-failed" }, 500);
 
   if (interest) {
     const { error: reviewError } = await adminClient
