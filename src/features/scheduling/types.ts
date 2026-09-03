@@ -59,6 +59,16 @@ export interface CoordinatorWeekCapacityProps {
   onToday?: () => void;
 }
 
+export interface CoordinatorMonthCapacityProps {
+  monthLabel: string;
+  days: CapacityDay[];
+  onSelectSlot?: (slot: CapacitySlot) => void;
+  onCreateShift?: (dayId?: string) => void;
+  onPreviousMonth?: () => void;
+  onNextMonth?: () => void;
+  onToday?: () => void;
+}
+
 export interface AvailableVolunteerSlot {
   id: string;
   startsAt: string;
