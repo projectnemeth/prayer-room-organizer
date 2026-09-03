@@ -54,8 +54,8 @@ describe('CoordinatorWeekCapacity', () => {
       />,
     )
 
-    expect(screen.getByText('0 of 2 places covered; 1 invitation pending')).toBeInTheDocument()
+    expect(screen.getByText('0 of 2 role openings covered; 1 invitation pending')).toBeInTheDocument()
     expect(screen.getByText('1 invitation pending')).toBeInTheDocument()
-    expect(screen.getByText('Open places').parentElement).toHaveTextContent('Open places1')
+    expect(screen.getByText('Open coverage').parentElement).toHaveTextContent('Open coverage1')
   })
 })

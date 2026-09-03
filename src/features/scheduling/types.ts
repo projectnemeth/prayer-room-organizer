@@ -26,6 +26,12 @@ export const SHIFT_ROLE_OPTIONS: ShiftRole[] = [
   "tech_director",
 ];
 
+export interface ShiftRoleRequirement {
+  role: ShiftRole;
+  required_count: number;
+  volunteer_instructions: string | null;
+}
+
 /**
  * Deliberately contains counts rather than people. Coordinator coverage can be
  * understood at a glance without turning the schedule into a volunteer roster.
@@ -93,10 +99,11 @@ export interface VolunteerAssignment {
   endsAt: string;
   title: string;
   locationLabel?: string;
-  instructions?: string;
   status: "pending" | "assigned" | "confirmed" | "absence_requested";
   /** Coordinator-assigned roles for this specific prayer set. Empty array means no role designated yet. */
   roles?: ShiftRole[];
+  /** Instructions are set by the coordinator for each role on this shift. */
+  roleInstructions?: Partial<Record<ShiftRole, string>>;
 }
 
 export interface VolunteerAssignmentsProps {

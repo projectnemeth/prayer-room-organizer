@@ -13,7 +13,7 @@ function formatTime(value: string) {
 function getCoverageLabel(slot: CapacitySlot) {
   const assignedCount = Math.min(slot.assignedCount, slot.capacity);
   const pendingCount = Math.min(slot.pendingCount ?? 0, Math.max(slot.capacity - assignedCount, 0));
-  const confirmed = `${assignedCount} of ${slot.capacity} places covered`;
+  const confirmed = `${assignedCount} of ${slot.capacity} role openings covered`;
   return pendingCount ? `${confirmed}; ${pendingCount} invitation${pendingCount === 1 ? "" : "s"} pending` : confirmed;
 }
 
@@ -96,10 +96,10 @@ export function CoordinatorWeekCapacity({
           <div className="border-t-2 border-altar-gold bg-white/50 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-altar-sage">Coverage</p>
             <p className="mt-2 font-display text-4xl text-altar-teal">{coveragePercent}%</p>
-            <p className="mt-2 text-sm text-altar-ink/70">{assigned} of {capacity} places covered</p>
+            <p className="mt-2 text-sm text-altar-ink/70">{assigned} of {capacity} role openings covered</p>
           </div>
           <div className="border-t-2 border-altar-gold bg-white/50 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-altar-sage">Open places</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-altar-sage">Open coverage</p>
             <p className="mt-2 font-display text-4xl text-altar-teal">{Math.max(capacity - reserved, 0)}</p>
             <p className="mt-2 text-sm text-altar-ink/70">{Math.max(reserved - assigned, 0)} invitation{reserved - assigned === 1 ? "" : "s"} pending</p>
           </div>
@@ -112,7 +112,7 @@ export function CoordinatorWeekCapacity({
 
         <section aria-labelledby="week-grid-heading" className="mt-10">
           <div className="flex items-baseline justify-between gap-6">
-            <h2 className="font-display text-2xl text-altar-teal" id="week-grid-heading">Shift capacity by day</h2>
+            <h2 className="font-display text-2xl text-altar-teal" id="week-grid-heading">Shift role coverage by day</h2>
             <p className="text-sm text-altar-sage">Select a shift to coordinate it.</p>
           </div>
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-7">

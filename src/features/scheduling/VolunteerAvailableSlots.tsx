@@ -49,7 +49,6 @@ export function VolunteerAvailableSlots({
         {claimableSlots.length > 0 ? (
           <ul aria-label="Available prayer-room shifts" className="mt-10 space-y-4">
             {claimableSlots.map((slot) => {
-              const places = remainingPlaces(slot);
               const isClaiming = claimingSlotId === slot.id;
               return (
                 <li className="border-l-2 border-altar-gold bg-white/50 p-5 sm:p-6" key={slot.id}>
@@ -61,7 +60,7 @@ export function VolunteerAvailableSlots({
                       <h2 className="mt-2 font-display text-2xl text-altar-teal">{slot.label}</h2>
                       {slot.focusTitle ? <p className="mt-2 text-sm text-altar-ink/75">Focus: {slot.focusTitle}</p> : null}
                       {slot.locationLabel ? <p className="mt-1 text-sm text-altar-ink/70">{slot.locationLabel}</p> : null}
-                      <p className="mt-3 text-sm font-semibold text-altar-teal">{places} {places === 1 ? "place" : "places"} open</p>
+                      <p className="mt-3 text-sm font-semibold text-altar-teal">Open to claim</p>
                     </div>
                     {onClaimSlot ? (
                       <button

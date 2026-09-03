@@ -18,4 +18,11 @@ describe('VolunteerAssignments', () => {
     expect(onRespond).toHaveBeenNthCalledWith(1, 'a2', 'accepted')
     expect(onRespond).toHaveBeenNthCalledWith(2, 'a2', 'declined')
   })
+
+  it('shows instructions only for the roles assigned to the volunteer', () => {
+    render(<VolunteerAssignments assignments={[{ id: 'a3', startsAt: '2026-10-07T18:00:00Z', endsAt: '2026-10-07T19:00:00Z', title: 'Prayer set', status: 'assigned', roles: ['tech_director'], roleInstructions: { tech_director: 'Arrive 15 minutes early to prepare sound.' } }]} />)
+
+    expect(screen.getByText('Tech Director')).toBeInTheDocument()
+    expect(screen.getByText('Arrive 15 minutes early to prepare sound.')).toBeInTheDocument()
+  })
 })

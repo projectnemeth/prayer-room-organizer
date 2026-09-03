@@ -7,9 +7,9 @@ declare
   v_config text;
 begin
   foreach v_function in array array[
-    'public.coordinator_create_shift(text,timestamp with time zone,timestamp with time zone,smallint,text,boolean,text,text,public.event_format,text)'::regprocedure,
-    'public.coordinator_update_shift(uuid,text,timestamp with time zone,timestamp with time zone,smallint,text,public.shift_status,boolean,text,text,public.event_format,text)'::regprocedure,
-    'public.coordinator_assign_volunteer(uuid,uuid)'::regprocedure,
+    'public.coordinator_create_shift(text,timestamp with time zone,timestamp with time zone,jsonb,boolean,text,text,public.event_format,text)'::regprocedure,
+    'public.coordinator_update_shift(uuid,text,timestamp with time zone,timestamp with time zone,jsonb,public.shift_status,boolean,text,text,public.event_format,text)'::regprocedure,
+    'public.coordinator_assign_volunteer_with_roles(uuid,uuid,public.shift_role[])'::regprocedure,
     'public.list_coordinator_schedule(timestamp with time zone,timestamp with time zone)'::regprocedure,
     'public.list_active_volunteers_for_assignment()'::regprocedure,
     'public.list_my_shift_assignments(integer)'::regprocedure,
