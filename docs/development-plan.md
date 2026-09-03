@@ -43,7 +43,7 @@ Launch a reliable MVP for the October Altar Initiative with a public daily-rhyth
 
 **Done when:**
 
-- Only a coordinator can approve an interest submission and issue an invitation.
+- An active coordinator or administrator can approve an interest submission and issue an invitation.
 - A new volunteer cannot read any shift data before invitation acceptance.
 - A volunteer can view only their own assignments and eligible open shifts.
 - An authorization test proves that a public, prospect, volunteer, coordinator, and administrator cannot access each other's protected records.

@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { canSendVolunteerInvitation } from "./authorization.ts";
 
 type InvitationResponse =
   | { outcome: "invitation-sent"; email: string }
@@ -67,12 +68,7 @@ Deno.serve(async (request) => {
     .eq("id", callerId)
     .maybeSingle();
 
-  if (
-    callerError
-    || !caller
-    || caller.status !== "active"
-    || (caller.role !== "coordinator" && caller.role !== "admin")
-  ) {
+  if (callerError || !canSendVolunteerInvitation(caller)) {
     return respond({ code: "forbidden" }, 403);
   }
 
