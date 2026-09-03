@@ -24,7 +24,7 @@ export interface ServeInterestReviewItem {
 export interface InterestReviewQueueProps {
   items?: ServeInterestReviewItem[];
   isLoading?: boolean;
-  /** Opens the coordinator-owned follow-up conversation for this interest. */
+  /** Records that a coordinator has begun a follow-up conversation for this interest. */
   onOpenInterest?: (interestId: string) => void;
   /**
    * Sends a private invitation through a coordinator-authorized server action.

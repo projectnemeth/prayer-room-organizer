@@ -85,7 +85,10 @@ Deno.serve(async (request) => {
 
   let interest: { id: string; name: string; email: string; status: string } | null = null;
   if (!directInvite) {
-    const result = await adminClient.from("interest_submissions").select("id, name, email, status").eq("id", body.interestId).maybeSingle();
+    // The already-authorized coordinator can read the interest they are
+    // reviewing. Keep this read on their session so a server-client problem
+    // cannot make an existing interest look missing.
+    const result = await callerClient.from("interest_submissions").select("id, name, email, status").eq("id", body.interestId).maybeSingle();
     interest = result.data;
     if (result.error || !interest) return respond({ code: "interest-not-found" }, 404);
     if (interest.status !== "submitted" && interest.status !== "reviewing") return respond({ code: "interest-not-ready" }, 409);
@@ -93,7 +96,7 @@ Deno.serve(async (request) => {
 
   const email = (directInvite ? body.email as string : interest!.email).trim().toLowerCase();
   const name = (directInvite ? body.name as string : interest!.name).trim();
-  const { data: existingProfile, error: profileLookupError } = await adminClient
+  const { data: existingProfile, error: profileLookupError } = await callerClient
     .from("profiles")
     .select("id, role, status")
     .eq("email", email)
@@ -101,6 +104,21 @@ Deno.serve(async (request) => {
   if (profileLookupError) return respond({ code: "profile-activation-failed" }, 500);
 
   if (existingProfile && directInvite) return respond({ code: "auth-account-exists" }, 409);
+  if (
+    existingProfile
+    && interest
+    && existingProfile.status === "active"
+    && (existingProfile.role === "volunteer" || existingProfile.role === "coordinator" || existingProfile.role === "admin")
+  ) {
+    const { error: reviewError } = await callerClient.rpc("review_interest_submission", {
+      p_interest_id: interest.id,
+      p_status: "approved",
+      p_decision_note: null,
+    });
+    if (reviewError) return respond({ code: "profile-activation-failed" }, 500);
+    return respond({ outcome: "access-activated", email });
+  }
+
   if (existingProfile) {
     const profileUpdate: Record<string, unknown> = {
       status: "active",

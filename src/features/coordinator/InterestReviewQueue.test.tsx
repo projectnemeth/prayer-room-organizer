@@ -34,4 +34,13 @@ describe('InterestReviewQueue', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Check the email provider')
     expect(screen.getByRole('button', { name: 'Try invitation again' })).toBeEnabled()
   })
+
+  it('labels the already-visible review action accurately', () => {
+    const onOpenInterest = vi.fn()
+    render(<InterestReviewQueue items={[interest]} onOpenInterest={onOpenInterest} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mark as in conversation' }))
+    expect(onOpenInterest).toHaveBeenCalledWith(interest.id)
+    expect(screen.queryByRole('button', { name: 'Review details' })).not.toBeInTheDocument()
+  })
 })
