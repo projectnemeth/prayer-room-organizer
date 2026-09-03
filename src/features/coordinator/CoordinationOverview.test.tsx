@@ -24,6 +24,7 @@ describe('CoordinationOverview', () => {
     expect(screen.getByText('Sep 2–Sep 8, 2026')).toBeInTheDocument()
     expect(screen.getByText('5')).toBeInTheDocument()
     expect(screen.getByText('Upcoming gatherings')).toBeInTheDocument()
+    expect(screen.getByText('Open serving interests')).toBeInTheDocument()
   })
 
   it('renders date navigation buttons and triggers callbacks', () => {

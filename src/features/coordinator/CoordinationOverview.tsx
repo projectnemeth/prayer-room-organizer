@@ -105,7 +105,7 @@ export function CoordinationOverview({
         <Metric detail="Public gatherings ahead" label="Upcoming gatherings" value={data.upcomingGatherings} />
         <Metric detail="Need an approved volunteer" label="Open volunteer slots" value={data.openVolunteerSlots} />
         <Metric detail="Already covered" label="Scheduled slots" value={data.scheduledVolunteerSlots} />
-        <Metric detail="Awaiting coordinator review" label="New serving interests" value={data.pendingInterests} />
+        <Metric detail="Awaiting coordinator review" label="Open serving interests" value={data.pendingInterests} />
       </div>
 
       <section aria-labelledby="coordination-attention-heading" className="mt-8 border-t border-altar-sage/30 pt-6">
