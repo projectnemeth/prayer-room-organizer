@@ -13,6 +13,7 @@ export interface ServeInterestSubmission {
 
 /** Schema-aligned payload for the public updates opt-in form. */
 export interface UpdatesSubscription {
+  name: string;
   email: string;
   /** Honeypot only; a filled value is accepted without sending an email. */
   website?: string;
@@ -76,7 +77,11 @@ export async function subscribeToUpdates(
   subscription: UpdatesSubscription,
 ): Promise<void> {
   const { error } = await client.functions.invoke("request-update-subscription", {
-    body: { email: email(subscription.email), website: optionalText(subscription.website) ?? "" },
+    body: {
+      name: requiredText(subscription.name, "Name"),
+      email: email(subscription.email),
+      website: optionalText(subscription.website) ?? "",
+    },
   });
 
   if (error) {

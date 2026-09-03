@@ -9,9 +9,15 @@ It does not send SMS or collect prayer requests.
 
 ## How consent works
 
-The public `/updates` form is double opt-in. Submitting it never sets `updates_opt_in` to true. Instead, the server records a hashed, 24-hour confirmation token and sends a confirmation email. Only a recipient who opens that link can activate updates. An unsubscribe is also token-based and no raw token is stored in the database.
+The public `/updates` form records a name and email, then uses double opt-in. Submitting it never sets `updates_opt_in` to true. Instead, the server records a hashed, 24-hour confirmation token and sends a confirmation email. Only a recipient who opens that link can activate updates. An unsubscribe is also token-based and no raw token is stored in the database.
 
 The request endpoint returns the same “check your email” response for a new, existing, opted-out, malformed, rate-limited, or honeypot submission. This prevents an address-enumeration endpoint. The database also limits requests to three per address and six per hashed request source in a rolling hour. Existing legacy single-step signups are disabled by migration `202609020020` until they opt in again.
+
+## Administrator access to confirmed subscribers
+
+An active **administrator** can sign in at `/coordinator`, select **Email updates**, and download the confirmed list as a CSV. The list includes the name supplied on the form, email address, and confirmation date. It deliberately excludes unconfirmed requests and people who unsubscribed, so it is the only list that should be used for updates.
+
+The database enforces this rule: public visitors, volunteers, and coordinators cannot read public subscriber records; only active accounts with the `admin` role can. Supabase project owners and anyone holding a service-role/database credential bypass application row-level security, so limit those credentials and Dashboard project access to the same trusted administrators.
 
 ## Required Edge Function secrets
 
@@ -42,9 +48,9 @@ supabase secrets set --project-ref fuwuwcyzerrdemxhrsjn \
 
 ## Deploy sequence
 
-1. Apply `supabase/migrations/202609020020_communications_delivery_and_double_opt_in.sql`.
+1. Apply the pending migrations, including `supabase/migrations/202609020020_communications_delivery_and_double_opt_in.sql` and `supabase/migrations/202609030030_update_subscriber_names_and_admin_access.sql`.
 2. Set the secrets above.
-3. Deploy each public endpoint with JWT verification disabled—the functions authenticate confirmation/unsubscribe tokens themselves and enforce allowed browser origins:
+3. Deploy each public endpoint with JWT verification disabled—the functions authenticate confirmation/unsubscribe tokens themselves and enforce allowed browser origins. Redeploy `request-update-subscription` after the name-field migration:
 
    ```bash
    supabase functions deploy request-update-subscription --project-ref fuwuwcyzerrdemxhrsjn --no-verify-jwt
@@ -88,4 +94,4 @@ Run that schedule statement once. Before creating it again, inspect `cron.job` f
 
 `process-reminder-jobs` claims no more than 25 due jobs atomically. Before sending, it rechecks the assignment generation and status plus the volunteer’s reminder preference. Ineligible or stale work becomes `skipped`; delivery failures are retried by the durable queue with increasing delay. Resend receives an idempotency key derived from the message-job id, so a network timeout cannot create a second reminder.
 
-Review `message_jobs` for `failed`, `processing`, and `sent` status, and use Resend’s delivery activity for provider-side delivery/bounce signals. Do not add a public update broadcast sender until it uses the confirmed preference query (`updates_opt_in = true`, `updates_confirmed_at is not null`, and `updates_unsubscribed_at is null`) and sends a current unsubscribe link with every message.
+Review `message_jobs` for `failed`, `processing`, and `sent` status, and use Resend’s delivery activity for provider-side delivery/bounce signals. A broadcast sender is not implemented yet. Use the administrator-only CSV for a sending tool that can preserve unsubscribe handling, or add a sender only when it uses the confirmed preference query (`updates_opt_in = true`, `updates_confirmed_at is not null`, and `updates_unsubscribed_at is null`) and sends a current unsubscribe link with every message.

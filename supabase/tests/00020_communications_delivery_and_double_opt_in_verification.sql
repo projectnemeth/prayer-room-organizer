@@ -11,7 +11,7 @@ declare
   v_source_hash text := repeat('c', 64);
 begin
   if has_function_privilege('anon', 'public.subscribe_to_updates(text, text)', 'EXECUTE')
-    or has_function_privilege('anon', 'public.request_update_subscription_confirmation(text, text, text, text)', 'EXECUTE')
+    or has_function_privilege('anon', 'public.request_update_subscription_confirmation(text, text, text, text, text)', 'EXECUTE')
     or has_function_privilege('anon', 'public.confirm_update_subscription(text)', 'EXECUTE')
     or has_function_privilege('anon', 'public.unsubscribe_update_subscription(text)', 'EXECUTE') then
     raise exception 'anonymous users must not receive direct update-consent procedure access';
@@ -23,15 +23,16 @@ begin
   end if;
 
   if not public.request_update_subscription_confirmation(
-    'double-opt-in-verification@example.invalid', v_confirm_hash, v_unsubscribe_hash, v_source_hash
+    'Double opt-in verification', 'double-opt-in-verification@example.invalid', v_confirm_hash, v_unsubscribe_hash, v_source_hash
   ) then
     raise exception 'confirmation request unexpectedly rate limited';
   end if;
 
   select id into v_preference_id
   from public.email_preferences
-  where email_normalized = 'double-opt-in-verification@example.invalid'
+    where email_normalized = 'double-opt-in-verification@example.invalid'
     and not updates_opt_in
+    and updates_subscriber_name = 'Double opt-in verification'
     and updates_confirmation_token_hash = v_confirm_hash
     and updates_confirmation_expires_at > timezone('utc', now());
   if v_preference_id is null then

@@ -89,7 +89,7 @@ export function App() {
   }
 
   const subscribe = async (values: UpdatesSignupValues) => {
-    await subscribeToUpdates(getSupabaseBrowserClient(), { email: values.email, website: values.website })
+    await subscribeToUpdates(getSupabaseBrowserClient(), { name: values.name, email: values.email, website: values.website })
   }
   const confirmUpdates = async (token: string) => confirmUpdateSubscription(getSupabaseBrowserClient(), token)
   const unsubscribeUpdates = async (token: string) => unsubscribeFromUpdates(getSupabaseBrowserClient(), token)

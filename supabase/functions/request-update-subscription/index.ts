@@ -35,6 +35,10 @@ function isEmail(value: unknown): value is string {
   return typeof value === "string" && value.trim().length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+function isName(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length >= 1 && value.trim().length <= 160;
+}
+
 async function sendConfirmationEmail(input: {
   confirmationToken: string;
   email: string;
@@ -84,7 +88,7 @@ Deno.serve(async (request) => {
   const origin = request.headers.get("origin")?.replace(/\/$/, "");
   if (origin && !configuredOrigins().includes(origin)) return response(request, { error: "Origin not allowed" }, 403);
 
-  let payload: { email?: unknown; website?: unknown };
+  let payload: { name?: unknown; email?: unknown; website?: unknown };
   try {
     payload = await request.json();
   } catch {
@@ -93,7 +97,7 @@ Deno.serve(async (request) => {
 
   // A filled honeypot receives the same success response but never writes or sends.
   if (typeof payload.website === "string" && payload.website.trim()) return response(request, { accepted: true }, 202);
-  if (!isEmail(payload.email)) return response(request, { accepted: true }, 202);
+  if (!isName(payload.name) || !isEmail(payload.email)) return response(request, { accepted: true }, 202);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -104,11 +108,13 @@ Deno.serve(async (request) => {
   }
 
   const normalizedEmail = payload.email.trim().toLowerCase();
+  const normalizedName = payload.name.trim();
   const source = `${request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for") ?? "unknown"}|${request.headers.get("user-agent") ?? "unknown"}`;
   const confirmationToken = opaqueToken();
   const unsubscribeToken = opaqueToken();
   const client = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: shouldSend, error } = await client.rpc("request_update_subscription_confirmation", {
+    p_name: normalizedName,
     p_email: normalizedEmail,
     p_confirmation_token_hash: await sha256(confirmationToken),
     p_unsubscribe_token_hash: await sha256(unsubscribeToken),

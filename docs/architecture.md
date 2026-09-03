@@ -57,7 +57,7 @@ Coordinator console
 ```text
 profiles(id, display_name, email, phone_e164, role, status)
 interest_submissions(id, name, email, phone_e164, availability, notes, status, reviewed_by)
-notification_preferences(id, profile_id, email_opt_in, consented_at)
+email_preferences(id, profile_id, email, updates_subscriber_name, updates_opt_in, updates_confirmed_at, updates_unsubscribed_at)
 room_events(id, title, starts_at, ends_at, visibility, event_type, description, created_by)
 shift_templates(id, weekday, starts_at, ends_at, required_volunteers, eligibility_rule)
 shifts(id, template_id, starts_at, ends_at, status, room_event_id)
@@ -71,7 +71,7 @@ Keep message content limited to scheduling and initiative communications. Do not
 
 ## Notification design
 
-- Public updates use double opt-in: store a hashed, expiring confirmation token and do not set `updates_opt_in` until its recipient confirms. Store only hashed unsubscribe tokens, and never let a direct public form re-enable an opted-out address.
+- Public updates use double opt-in: store a name and a hashed, expiring confirmation token, and do not set `updates_opt_in` until its recipient confirms. Store only hashed unsubscribe tokens, and never let a direct public form re-enable an opted-out address. Confirmed subscriber names and emails are visible only to active administrators (and never to public visitors, volunteers, or coordinators).
 - Run the public update request, confirmation, and unsubscribe paths as narrow, rate-limited Edge Functions. Keep Resend credentials, source-rate-limit pepper, and token hashing server-side.
 - Use a job record with idempotency keys before attempting delivery, so scheduler retries cannot duplicate reminders. Resend accepts an idempotency key for email sends.
 - Store provider IDs and delivery status, not more message content than operationally necessary.

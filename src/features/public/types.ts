@@ -47,6 +47,7 @@ export interface ServeInterestValues {
 }
 
 export interface UpdatesSignupValues {
+  name: string;
   email: string;
   website?: string;
 }
