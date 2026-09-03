@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { projectApiKey } from "./api-key.ts";
 import { canSendVolunteerInvitation } from "./authorization.ts";
 
 type InvitationResponse =
@@ -34,11 +35,17 @@ Deno.serve(async (request) => {
   if (request.method !== "POST") return respond({ code: "method-not-allowed" }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const environment = {
+    SUPABASE_ANON_KEY: Deno.env.get("SUPABASE_ANON_KEY"),
+    SUPABASE_PUBLISHABLE_KEYS: Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"),
+    SUPABASE_SECRET_KEYS: Deno.env.get("SUPABASE_SECRET_KEYS"),
+    SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+  };
+  const publishableKey = projectApiKey(environment, "SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_ANON_KEY");
+  const serviceRoleKey = projectApiKey(environment, "SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const authorization = request.headers.get("Authorization");
 
-  if (!supabaseUrl || !anonKey || !serviceRoleKey) return respond({ code: "server-misconfigured" }, 500);
+  if (!supabaseUrl || !publishableKey || !serviceRoleKey) return respond({ code: "server-misconfigured" }, 500);
   if (!authorization?.startsWith("Bearer ")) return respond({ code: "unauthorized" }, 401);
 
   let body: { interestId?: unknown; name?: unknown; email?: unknown };
@@ -51,7 +58,7 @@ Deno.serve(async (request) => {
   if (!directInvite && !isUuid(body.interestId)) return respond({ code: "invalid-request" }, 400);
   if (directInvite && (typeof body.name !== "string" || body.name.trim().length < 2 || body.name.trim().length > 160 || typeof body.email !== "string" || !/^\S+@\S+\.\S+$/.test(body.email.trim()))) return respond({ code: "invalid-request" }, 400);
 
-  const callerClient = createClient(supabaseUrl, anonKey, {
+  const callerClient = createClient(supabaseUrl, publishableKey, {
     auth: { autoRefreshToken: false, persistSession: false },
     global: { headers: { Authorization: authorization } },
   });
