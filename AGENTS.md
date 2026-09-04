@@ -6,5 +6,6 @@
 
 ## Supabase
 
-- Do not make production Supabase changes directly through the dashboard or CLI.
-- Give the user a concise SQL snippet that they can run in the Supabase web SQL Editor for every Supabase database update. If a requested Supabase change cannot be expressed as SQL (for example, an Edge Function or Auth dashboard setting), clearly identify the required manual dashboard step instead of performing it.
+- Use the connected Supabase plugin as the default path for production database, Auth, and Edge Function work. Make the change and verify it through the plugin rather than asking the user to run SQL or make dashboard changes.
+- If the Supabase plugin is unavailable or lacks the required capability, explain the limitation and use a manual SQL/dashboard step only after confirming with the user.
+- Keep the repository migration history aligned with production changes and follow the Supabase plugin's verification and security guidance.
