@@ -33,7 +33,7 @@ describe('CoordinatorWeekCapacity', () => {
     expect(onNextWeek).toHaveBeenCalledTimes(1)
   })
 
-  it('counts a pending invitation as reserved capacity without calling it covered', () => {
+  it('shows claims awaiting a role without treating the shift as full', () => {
     render(
       <CoordinatorWeekCapacity
         weekLabel="Oct 4–Oct 10, 2026"
@@ -46,16 +46,17 @@ describe('CoordinatorWeekCapacity', () => {
             startsAt: '2026-10-04T18:00:00Z',
             endsAt: '2026-10-04T19:00:00Z',
             label: 'Evening Altar',
-            capacity: 2,
-            assignedCount: 0,
+            volunteerCount: 1,
+            unassignedClaimCount: 1,
             pendingCount: 1,
+            roleCoverage: [{ role: 'worship_leader', required_count: 1, serving_count: 0 }],
           }],
         }]}
       />,
     )
 
-    expect(screen.getByText('0 of 2 role openings covered; 1 invitation pending')).toBeInTheDocument()
-    expect(screen.getByText('1 invitation pending')).toBeInTheDocument()
-    expect(screen.getByText('Open coverage').parentElement).toHaveTextContent('Open coverage1')
+    expect(screen.getByText('1 volunteer serving')).toBeInTheDocument()
+    expect(screen.getByText('1 needs a role')).toBeInTheDocument()
+    expect(screen.getByText('Worship Leader 0/1')).toBeInTheDocument()
   })
 })

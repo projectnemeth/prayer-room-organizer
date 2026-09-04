@@ -14,4 +14,6 @@ export type {
   VolunteerAssignmentsProps,
   ShiftRole,
   ShiftRoleRequirement,
+  ShiftRoleCoverage,
+  CoordinatorShiftAssignment,
 } from "./types";

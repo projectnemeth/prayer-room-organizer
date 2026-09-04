@@ -1,4 +1,4 @@
-import type { AvailableVolunteerSlot, VolunteerAvailableSlotsProps } from "./types";
+import { SHIFT_ROLE_LABELS, type VolunteerAvailableSlotsProps } from "./types";
 
 const churchTimeZone = "America/Denver";
 
@@ -19,13 +19,9 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
-function remainingPlaces(slot: AvailableVolunteerSlot) {
-  return Math.max(slot.capacity - slot.assignedCount, 0);
-}
-
 /**
- * An approved volunteer sees only shifts they can claim. No other volunteer's
- * identity or assignment state is part of this view's data contract.
+ * An approved volunteer sees safe aggregate role counts, never another
+ * volunteer's identity or private schedule.
  */
 export function VolunteerAvailableSlots({
   periodLabel,
@@ -33,60 +29,62 @@ export function VolunteerAvailableSlots({
   claimingSlotId,
   onClaimSlot,
 }: VolunteerAvailableSlotsProps) {
-  const claimableSlots = slots.filter((slot) => remainingPlaces(slot) > 0);
-
   return (
     <main className="min-h-full bg-altar-parchment px-6 py-14 text-altar-ink sm:px-10 lg:px-16">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-6xl">
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-altar-teal">The Altar Initiative · Volunteer portal</p>
-          <h1 className="mt-3 font-display text-4xl leading-tight text-altar-teal sm:text-5xl">Available moments to serve</h1>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-altar-ink/75">
-            {periodLabel}. Choose an open moment that fits your availability; your confirmation and reminders will appear in your private schedule.
+          <h1 className="mt-3 font-display text-4xl leading-tight text-altar-teal sm:text-5xl">Prayer shifts</h1>
+          <p className="mt-4 max-w-3xl text-lg leading-8 text-altar-ink/75">
+            {periodLabel}. See where each role is most needed, then choose a shift that fits your availability. A coordinator will assign your function after you serve at a shift.
           </p>
         </header>
 
-        {claimableSlots.length > 0 ? (
-          <ul aria-label="Available prayer-room shifts" className="mt-10 space-y-4">
-            {claimableSlots.map((slot) => {
+        {slots.length > 0 ? (
+          <ul aria-label="Prayer-room shifts" className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {slots.map((slot) => {
               const isClaiming = claimingSlotId === slot.id;
               return (
-                <li className="border-l-2 border-altar-gold bg-white/50 p-5 sm:p-6" key={slot.id}>
-                  <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <li className="flex min-h-72 flex-col border-t-2 border-altar-gold bg-white/50 p-5" key={slot.id}>
+                  <div className="flex flex-1 flex-col">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-altar-sage">
                         {formatDate(slot.startsAt)} · {formatTime(slot.startsAt)}–{formatTime(slot.endsAt)}
                       </p>
-                      <h2 className="mt-2 font-display text-2xl text-altar-teal">{slot.label}</h2>
+                      <h2 className="mt-2 font-display text-xl text-altar-teal">{slot.label}</h2>
                       {slot.focusTitle ? <p className="mt-2 text-sm text-altar-ink/75">Focus: {slot.focusTitle}</p> : null}
-                      {slot.locationLabel ? <p className="mt-1 text-sm text-altar-ink/70">{slot.locationLabel}</p> : null}
-                      <p className="mt-3 text-sm font-semibold text-altar-teal">Open to claim</p>
+                      <p className="mt-3 text-sm font-semibold text-altar-teal">{slot.volunteerCount} volunteer{slot.volunteerCount === 1 ? "" : "s"} serving at this shift</p>
                     </div>
+                    <ul className="mt-4 grid gap-x-3 gap-y-1 text-xs text-altar-ink/75 sm:grid-cols-2" aria-label="Role coverage">
+                      {slot.roleCoverage.map((coverage) => <li key={coverage.role}><span className="font-semibold text-altar-teal">{SHIFT_ROLE_LABELS[coverage.role]}</span> {coverage.serving_count}/{coverage.required_count}</li>)}
+                    </ul>
+                    <div className="mt-5 pt-1">
                     {onClaimSlot ? (
                       <button
-                        className="button-primary shrink-0"
+                        className="button-primary w-full"
                         disabled={isClaiming}
                         onClick={() => onClaimSlot(slot)}
                         type="button"
                       >
-                        {isClaiming ? "Claiming…" : "Claim this time"}
+                        {isClaiming ? "Saving…" : "Serve at this shift"}
                       </button>
                     ) : null}
+                    </div>
                   </div>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <section aria-labelledby="no-open-shifts" className="mt-10 border-l-2 border-altar-gold bg-white/50 p-6">
-            <h2 className="font-display text-2xl text-altar-teal" id="no-open-shifts">No open moments right now</h2>
+          <section aria-labelledby="no-shifts" className="mt-10 border-l-2 border-altar-gold bg-white/50 p-6">
+            <h2 className="font-display text-2xl text-altar-teal" id="no-shifts">No prayer shifts right now</h2>
             <p className="mt-3 max-w-2xl leading-7 text-altar-ink/75">
               Thank you for your willingness to serve. A coordinator will add new opportunities as the rhythm of the room takes shape.
             </p>
           </section>
         )}
 
-        <p className="mt-8 text-sm leading-6 text-altar-sage">All times are shown in America/Denver. This view shows availability, never another volunteer’s schedule.</p>
+        <p className="mt-8 text-sm leading-6 text-altar-sage">All times are shown in America/Denver. Role counts are shared to help coverage; volunteer names and schedules stay private.</p>
       </div>
     </main>
   );

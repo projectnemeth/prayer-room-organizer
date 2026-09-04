@@ -38,9 +38,12 @@ function formatWhen(value: string): string {
   }).format(new Date(value));
 }
 
-function messageFor(templateKey: string, shift: Shift, portalUrl: string): { subject: string; html: string; text: string } {
+function messageFor(templateKey: string, shift: Shift, portalUrl: string, context: unknown): { subject: string; html: string; text: string } {
   const when = formatWhen(shift.starts_at);
   const instruction = shift.volunteer_instructions?.trim();
+  const claimContext = context && typeof context === "object" ? context as { claimant_name?: unknown; shift_title?: unknown } : {};
+  const claimantName = typeof claimContext.claimant_name === "string" ? claimContext.claimant_name : "A volunteer";
+  const shiftTitle = typeof claimContext.shift_title === "string" ? claimContext.shift_title : "Prayer Room shift";
   const template = {
     assignment_request: {
       subject: "A Prayer Room serving invitation · The Altar Initiative",
@@ -66,6 +69,11 @@ function messageFor(templateKey: string, shift: Shift, portalUrl: string): { sub
       subject: "Please confirm your Prayer Room serving time",
       lead: "Your serving time still needs confirmation.",
       prompt: "Please check your schedule for this upcoming time:",
+    },
+    volunteer_claimed: {
+      subject: `${claimantName} claimed a Prayer Room shift`,
+      lead: `${claimantName} is serving at ${shiftTitle}.`,
+      prompt: "Please open Weekly or Monthly Coverage and assign their function for:",
     },
   }[templateKey] ?? {
     subject: "Prayer Room schedule update",
@@ -178,8 +186,8 @@ Deno.serve(async (request) => {
         client.from("email_preferences").select("email, email_reminders_opt_in").eq("profile_id", job.recipient_profile_id).maybeSingle<{ email: string; email_reminders_opt_in: boolean }>(),
       ]);
       if (assignmentError || preferenceError) throw new Error("Unable to load current reminder delivery data.");
-      const isTransactionalInvitation = job.template_key === "assignment_request";
-      if (!assignment || !preference?.email || (!isTransactionalInvitation && !preference.email_reminders_opt_in) || !contextAllowsDelivery(job, assignment)) {
+      const isTransactional = job.template_key === "assignment_request" || job.template_key === "volunteer_claimed";
+      if (!assignment || !preference?.email || (!isTransactional && !preference.email_reminders_opt_in) || !contextAllowsDelivery(job, assignment)) {
         await complete(client, job, workerId, "skipped", undefined, "The assignment or reminder preference is no longer eligible for delivery.");
         totals.skipped += 1;
         continue;
@@ -196,7 +204,7 @@ Deno.serve(async (request) => {
       const providerMessageId = await sendWithResend({
         from,
         jobId: job.id,
-        message: messageFor(job.template_key, shift, `${siteUrl}/portal`),
+        message: messageFor(job.template_key, shift, `${siteUrl}${job.template_key === "volunteer_claimed" ? "/coordinator" : "/portal"}`, job.context),
         recipient: preference.email,
         resendApiKey,
       });

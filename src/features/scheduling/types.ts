@@ -32,19 +32,37 @@ export interface ShiftRoleRequirement {
   volunteer_instructions: string | null;
 }
 
+/** Aggregate coverage only. It is safe to share in the volunteer portal. */
+export interface ShiftRoleCoverage {
+  role: ShiftRole;
+  required_count: number;
+  serving_count: number;
+}
+
+/** Coordinator-only identity data for a selected shift. */
+export interface CoordinatorShiftAssignment {
+  assignment_id: string;
+  profile_id: string;
+  display_name: string;
+  email: string;
+  assignment_status: "pending" | "assigned" | "confirmed" | "absence_requested";
+  roles: ShiftRole[];
+}
+
 /**
- * Deliberately contains counts rather than people. Coordinator coverage can be
- * understood at a glance without turning the schedule into a volunteer roster.
+ * Calendar cards use aggregate counts; identity data appears only after a
+ * coordinator selects a shift to assign a role.
  */
 export interface CapacitySlot {
   id: string;
   startsAt: string;
   endsAt: string;
   label: string;
-  capacity: number;
-  assignedCount: number;
-  /** Invitations awaiting a response reserve capacity but are not confirmed coverage. */
+  volunteerCount: number;
+  /** Active claims with no coordinator-selected function yet. */
+  unassignedClaimCount: number;
   pendingCount?: number;
+  roleCoverage: ShiftRoleCoverage[];
   status?: "scheduled" | "cancelled" | "completed";
 }
 
@@ -80,10 +98,9 @@ export interface AvailableVolunteerSlot {
   startsAt: string;
   endsAt: string;
   label: string;
-  locationLabel?: string;
   focusTitle?: string;
-  capacity: number;
-  assignedCount: number;
+  volunteerCount: number;
+  roleCoverage: ShiftRoleCoverage[];
 }
 
 export interface VolunteerAvailableSlotsProps {

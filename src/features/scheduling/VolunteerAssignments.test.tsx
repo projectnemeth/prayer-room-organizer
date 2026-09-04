@@ -25,4 +25,10 @@ describe('VolunteerAssignments', () => {
     expect(screen.getByText('Tech Director')).toBeInTheDocument()
     expect(screen.getByText('Arrive 15 minutes early to prepare sound.')).toBeInTheDocument()
   })
+
+  it('marks a self-claimed shift as awaiting a coordinator role assignment', () => {
+    render(<VolunteerAssignments assignments={[{ id: 'a4', startsAt: '2026-10-08T18:00:00Z', endsAt: '2026-10-08T19:00:00Z', title: 'Prayer set', status: 'assigned', roles: [] }]} />)
+
+    expect(screen.getByText('Role assignment pending')).toBeInTheDocument()
+  })
 })

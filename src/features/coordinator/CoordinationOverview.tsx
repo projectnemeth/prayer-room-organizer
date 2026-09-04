@@ -103,8 +103,8 @@ export function CoordinationOverview({
 
       <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Metric detail="Public gatherings ahead" label="Upcoming gatherings" value={data.upcomingGatherings} />
-        <Metric detail="Need an approved volunteer" label="Open volunteer slots" value={data.openVolunteerSlots} />
-        <Metric detail="Already covered" label="Scheduled slots" value={data.scheduledVolunteerSlots} />
+        <Metric detail="Coordinator function assignment needed" label="Claims needing roles" value={data.openVolunteerSlots} />
+        <Metric detail="Across upcoming prayer shifts" label="Volunteers serving" value={data.scheduledVolunteerSlots} />
         <Metric detail="Awaiting coordinator review" label="Open serving interests" value={data.pendingInterests} />
       </div>
 
