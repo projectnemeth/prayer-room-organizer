@@ -128,9 +128,13 @@ export interface VolunteerAssignment {
   roles?: ShiftRole[];
   /** Instructions are set by the coordinator for each role on this shift. */
   roleInstructions?: Partial<Record<ShiftRole, string>>;
+  /** Shown until the volunteer acknowledges a coordinator's role change. */
+  roleNoticePending?: boolean;
 }
 
 export interface VolunteerAssignmentsProps {
   assignments: VolunteerAssignment[];
   onRespondToInvitation?: (assignmentId: string, response: "accepted" | "declined") => void;
+  onDismissRoleNotice?: (assignmentId: string) => void;
+  dismissingRoleNoticeId?: string;
 }

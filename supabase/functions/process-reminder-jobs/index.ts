@@ -20,6 +20,14 @@ type Shift = {
   volunteer_instructions: string | null;
 };
 
+const roleLabels: Record<string, string> = {
+  prayer_leader: "Prayer Leader",
+  worship_leader: "Worship Leader",
+  worship_team_member: "Worship Team Member",
+  host: "Host",
+  tech_director: "Tech Director",
+};
+
 function json(body: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
 }
@@ -44,6 +52,14 @@ function messageFor(templateKey: string, shift: Shift, portalUrl: string, contex
   const claimContext = context && typeof context === "object" ? context as { claimant_name?: unknown; shift_title?: unknown } : {};
   const claimantName = typeof claimContext.claimant_name === "string" ? claimContext.claimant_name : "A volunteer";
   const shiftTitle = typeof claimContext.shift_title === "string" ? claimContext.shift_title : "Prayer Room shift";
+  const roleContext = context && typeof context === "object" ? context as { role_change?: unknown; roles?: unknown } : {};
+  const roleNames = Array.isArray(roleContext.roles)
+    ? roleContext.roles.filter((role): role is string => typeof role === "string" && role in roleLabels).map((role) => roleLabels[role])
+    : [];
+  const roleChange = roleContext.role_change === "updated" ? "updated" : "assigned";
+  const rolePrompt = roleNames.length
+    ? `Your coordinator has ${roleChange} your serving role${roleNames.length === 1 ? "" : "s"}: ${roleNames.join(" · ")}.`
+    : "Your coordinator has updated your serving role. Please review your private schedule.";
   const template = {
     assignment_request: {
       subject: "A Prayer Room serving invitation · The Altar Initiative",
@@ -74,6 +90,11 @@ function messageFor(templateKey: string, shift: Shift, portalUrl: string, contex
       subject: `${claimantName} claimed a Prayer Room shift`,
       lead: `${claimantName} is serving at ${shiftTitle}.`,
       prompt: "Please open Weekly or Monthly Coverage and assign their function for:",
+    },
+    role_assignment: {
+      subject: `Your Prayer Room role has been ${roleChange}`,
+      lead: `Your Prayer Room role has been ${roleChange}.`,
+      prompt: rolePrompt,
     },
   }[templateKey] ?? {
     subject: "Prayer Room schedule update",
@@ -186,7 +207,7 @@ Deno.serve(async (request) => {
         client.from("email_preferences").select("email, email_reminders_opt_in").eq("profile_id", job.recipient_profile_id).maybeSingle<{ email: string; email_reminders_opt_in: boolean }>(),
       ]);
       if (assignmentError || preferenceError) throw new Error("Unable to load current reminder delivery data.");
-      const isTransactional = job.template_key === "assignment_request" || job.template_key === "volunteer_claimed";
+      const isTransactional = job.template_key === "assignment_request" || job.template_key === "volunteer_claimed" || job.template_key === "role_assignment";
       if (!assignment || !preference?.email || (!isTransactional && !preference.email_reminders_opt_in) || !contextAllowsDelivery(job, assignment)) {
         await complete(client, job, workerId, "skipped", undefined, "The assignment or reminder preference is no longer eligible for delivery.");
         totals.skipped += 1;

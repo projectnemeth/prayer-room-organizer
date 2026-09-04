@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { vi } from 'vitest'
 import { VolunteerAssignments } from './VolunteerAssignments'
 
 describe('VolunteerAssignments', () => {
@@ -30,5 +31,14 @@ describe('VolunteerAssignments', () => {
     render(<VolunteerAssignments assignments={[{ id: 'a4', startsAt: '2026-10-08T18:00:00Z', endsAt: '2026-10-08T19:00:00Z', title: 'Prayer set', status: 'assigned', roles: [] }]} />)
 
     expect(screen.getByText('Role assignment pending')).toBeInTheDocument()
+  })
+
+  it('shows and dismisses a coordinator role-update notice', () => {
+    const onDismissRoleNotice = vi.fn()
+    render(<VolunteerAssignments assignments={[{ id: 'a5', startsAt: '2026-10-08T18:00:00Z', endsAt: '2026-10-08T19:00:00Z', title: 'Prayer set', status: 'assigned', roles: ['host'], roleNoticePending: true }]} onDismissRoleNotice={onDismissRoleNotice} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('Your coordinator has updated your serving role.')
+    screen.getByRole('button', { name: 'Dismiss' }).click()
+    expect(onDismissRoleNotice).toHaveBeenCalledWith('a5')
   })
 })
