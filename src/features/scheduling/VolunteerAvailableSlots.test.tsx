@@ -24,4 +24,19 @@ describe('VolunteerAvailableSlots', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Serve at this shift' }))
     expect(onClaimSlot).toHaveBeenCalledWith(expect.objectContaining({ id: 'shift-1' }))
   })
+
+  it('keeps an already-claimed shift visible as a scheduled state', () => {
+    render(<VolunteerAvailableSlots periodLabel="Welcome, Andrew" slots={[{
+      id: 'shift-1',
+      startsAt: '2026-10-01T18:00:00-06:00',
+      endsAt: '2026-10-01T19:00:00-06:00',
+      label: 'Evening prayer',
+      volunteerCount: 1,
+      roleCoverage: [],
+      isScheduled: true,
+    }]} />)
+
+    expect(screen.getByRole('button', { name: 'You are scheduled for this shift' })).toBeDisabled()
+    expect(screen.getByText('A coordinator will assign your function.')).toBeInTheDocument()
+  })
 })

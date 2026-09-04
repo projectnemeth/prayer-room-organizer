@@ -101,12 +101,15 @@ export interface AvailableVolunteerSlot {
   focusTitle?: string;
   volunteerCount: number;
   roleCoverage: ShiftRoleCoverage[];
+  /** The current volunteer already holds this shift. */
+  isScheduled?: boolean;
 }
 
 export interface VolunteerAvailableSlotsProps {
   periodLabel: string;
   slots: AvailableVolunteerSlot[];
   claimingSlotId?: string;
+  claimError?: { slotId: string; message: string } | null;
   onClaimSlot?: (slot: AvailableVolunteerSlot) => void;
 }
 

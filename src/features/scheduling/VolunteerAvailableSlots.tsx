@@ -27,6 +27,7 @@ export function VolunteerAvailableSlots({
   periodLabel,
   slots,
   claimingSlotId,
+  claimError,
   onClaimSlot,
 }: VolunteerAvailableSlotsProps) {
   return (
@@ -44,6 +45,8 @@ export function VolunteerAvailableSlots({
           <ul aria-label="Prayer-room shifts" className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {slots.map((slot) => {
               const isClaiming = claimingSlotId === slot.id;
+              const scheduled = slot.isScheduled === true;
+              const cardError = claimError?.slotId === slot.id ? claimError.message : null;
               return (
                 <li className="flex min-h-72 flex-col border-t-2 border-altar-gold bg-white/50 p-5" key={slot.id}>
                   <div className="flex flex-1 flex-col">
@@ -59,7 +62,9 @@ export function VolunteerAvailableSlots({
                       {slot.roleCoverage.map((coverage) => <li key={coverage.role}><span className="font-semibold text-altar-teal">{SHIFT_ROLE_LABELS[coverage.role]}</span> {coverage.serving_count}/{coverage.required_count}</li>)}
                     </ul>
                     <div className="mt-5 pt-1">
-                    {onClaimSlot ? (
+                    {scheduled ? (
+                      <><button className="focus-ring w-full cursor-default rounded-sm border border-altar-sage bg-altar-sage/35 px-4 py-3 font-semibold text-altar-teal" disabled type="button">You are scheduled for this shift</button><p className="mt-3 text-center text-xs font-semibold text-altar-teal" role="status">A coordinator will assign your function.</p></>
+                    ) : onClaimSlot ? (
                       <button
                         className="button-primary w-full"
                         disabled={isClaiming}
@@ -69,6 +74,7 @@ export function VolunteerAvailableSlots({
                         {isClaiming ? "Saving…" : "Serve at this shift"}
                       </button>
                     ) : null}
+                    {cardError ? <p className="mt-3 text-sm leading-5 text-[#9A3412]" role="alert">{cardError}</p> : null}
                     </div>
                   </div>
                 </li>
