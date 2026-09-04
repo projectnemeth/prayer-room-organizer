@@ -103,14 +103,18 @@ export interface AvailableVolunteerSlot {
   roleCoverage: ShiftRoleCoverage[];
   /** The current volunteer already holds this shift. */
   isScheduled?: boolean;
+  /** The current volunteer's active assignment, used only to release their own shift. */
+  assignmentId?: string;
 }
 
 export interface VolunteerAvailableSlotsProps {
   periodLabel: string;
   slots: AvailableVolunteerSlot[];
   claimingSlotId?: string;
+  cancellingSlotId?: string;
   claimError?: { slotId: string; message: string } | null;
   onClaimSlot?: (slot: AvailableVolunteerSlot) => void;
+  onCancelSlot?: (slot: AvailableVolunteerSlot) => void;
 }
 
 export interface VolunteerAssignment {

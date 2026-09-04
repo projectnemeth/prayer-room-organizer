@@ -27,8 +27,10 @@ export function VolunteerAvailableSlots({
   periodLabel,
   slots,
   claimingSlotId,
+  cancellingSlotId,
   claimError,
   onClaimSlot,
+  onCancelSlot,
 }: VolunteerAvailableSlotsProps) {
   return (
     <main className="min-h-full bg-altar-parchment px-6 py-14 text-altar-ink sm:px-10 lg:px-16">
@@ -45,6 +47,7 @@ export function VolunteerAvailableSlots({
           <ul aria-label="Prayer-room shifts" className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {slots.map((slot) => {
               const isClaiming = claimingSlotId === slot.id;
+              const isCancelling = cancellingSlotId === slot.id;
               const scheduled = slot.isScheduled === true;
               const cardError = claimError?.slotId === slot.id ? claimError.message : null;
               return (
@@ -63,7 +66,7 @@ export function VolunteerAvailableSlots({
                     </ul>
                     <div className="mt-5 pt-1">
                     {scheduled ? (
-                      <><button className="focus-ring w-full cursor-default rounded-sm border border-altar-sage bg-altar-sage/35 px-4 py-3 font-semibold text-altar-teal" disabled type="button">You are scheduled for this shift</button><p className="mt-3 text-center text-xs font-semibold text-altar-teal" role="status">A coordinator will assign your function.</p></>
+                      <><button className="focus-ring w-full cursor-default rounded-sm border border-altar-sage bg-altar-sage/35 px-4 py-3 font-semibold text-altar-teal" disabled type="button">You are scheduled for this shift</button><p className="mt-3 text-center text-xs font-semibold text-altar-teal" role="status">A coordinator will assign your function.</p>{onCancelSlot && slot.assignmentId ? <button className="focus-ring mt-3 w-full rounded-sm border border-altar-teal/60 bg-white/60 px-4 py-2 text-sm font-semibold text-altar-teal transition hover:bg-altar-stone/45 disabled:cursor-wait disabled:opacity-60" disabled={isCancelling} onClick={() => onCancelSlot(slot)} type="button">{isCancelling ? "Cancelling…" : "Cancel this shift"}</button> : null}</>
                     ) : onClaimSlot ? (
                       <button
                         className="button-primary w-full"

@@ -26,17 +26,21 @@ describe('VolunteerAvailableSlots', () => {
   })
 
   it('keeps an already-claimed shift visible as a scheduled state', () => {
+    const onCancelSlot = vi.fn()
     render(<VolunteerAvailableSlots periodLabel="Welcome, Andrew" slots={[{
       id: 'shift-1',
+      assignmentId: 'assignment-1',
       startsAt: '2026-10-01T18:00:00-06:00',
       endsAt: '2026-10-01T19:00:00-06:00',
       label: 'Evening prayer',
       volunteerCount: 1,
       roleCoverage: [],
       isScheduled: true,
-    }]} />)
+    }]} onCancelSlot={onCancelSlot} />)
 
     expect(screen.getByRole('button', { name: 'You are scheduled for this shift' })).toBeDisabled()
     expect(screen.getByText('A coordinator will assign your function.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel this shift' }))
+    expect(onCancelSlot).toHaveBeenCalledWith(expect.objectContaining({ id: 'shift-1', assignmentId: 'assignment-1' }))
   })
 })
