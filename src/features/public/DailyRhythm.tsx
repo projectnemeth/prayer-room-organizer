@@ -1,5 +1,6 @@
-import { getTodayPrayerFocus, weeklyPrayerFocusSchedule } from "./mock-data";
+import { getPrayerFocusForDayOfWeek, weeklyPrayerFocusSchedule } from "./mock-data";
 import type { PrayerFocus } from "./types";
+import { useChurchDay } from './useChurchDay';
 
 interface DailyRhythmProps {
   focus?: PrayerFocus;
@@ -27,14 +28,15 @@ const rhythmMoments = [
 ];
 
 export function DailyRhythm({ focus }: DailyRhythmProps) {
-  const currentFocus = focus ?? getTodayPrayerFocus();
-  const currentDayOfWeek = new Date().getDay();
+  const churchDay = useChurchDay();
+  const currentFocus = focus ?? getPrayerFocusForDayOfWeek(churchDay.dayOfWeek);
+  const currentDayOfWeek = churchDay.dayOfWeek;
 
   return (
     <main className="min-h-full bg-[#F5F1E8] px-6 py-14 text-[#1F2421] sm:px-10 lg:px-16">
       <div className="mx-auto max-w-5xl">
         <header className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3F5F5B]">The Altar Initiative</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3F5F5B]">The ALTAR Rhythm</p>
           <h1 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">A daily rhythm of prayer</h1>
           <p className="mt-5 text-lg leading-8 text-[#1F2421]/80">Morning, noon, and evening—small, shared practices that help us turn our attention to Jesus together.</p>
         </header>
@@ -69,7 +71,7 @@ export function DailyRhythm({ focus }: DailyRhythmProps) {
           ) : null}
         </section>
 
-        <section aria-labelledby="weekly-focus-heading" className="mt-14">
+        <section aria-labelledby="weekly-focus-heading" className="mt-14 scroll-mt-24" id="weekly-focus" tabIndex={-1}>
           <div className="border-b border-[#D9D3C6] pb-4">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6F8580]">Weekly focus rhythm</p>
             <h2 id="weekly-focus-heading" className="mt-2 font-serif text-3xl">Seven days of focused intercession</h2>
@@ -84,6 +86,7 @@ export function DailyRhythm({ focus }: DailyRhythmProps) {
               return (
                 <article
                   key={item.shortDay}
+                  id={item.resourceUrl?.startsWith('#') ? item.resourceUrl.slice(1) : undefined}
                   className={`border-t-2 p-6 transition ${
                     isToday
                       ? "border-[#B99A61] bg-[#3F5F5B]/10 shadow-sm ring-1 ring-[#3F5F5B]/20"
@@ -113,6 +116,20 @@ export function DailyRhythm({ focus }: DailyRhythmProps) {
               );
             })}
           </div>
+        </section>
+
+        <section aria-labelledby="scriptures-heading" className="mt-14 scroll-mt-24 border-t border-[#D9D3C6] pt-10" id="praying-the-scriptures" tabIndex={-1}>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6F8580]">The Scriptures that shape our prayers</p>
+          <h2 id="scriptures-heading" className="mt-2 font-serif text-3xl">Praying through Scripture</h2>
+          <p className="mt-4 max-w-3xl leading-7 text-[#1F2421]/80">
+            The Psalms give us words for morning, noon, and evening prayer. We follow a monthly rhythm,
+            returning to the beginning of the reading cycle with each new month. At noon, you may also
+            read the Proverb that matches the day of the month. Today is day {churchDay.dayOfMonth} of that cycle.
+          </p>
+          <p className="mt-4 max-w-3xl leading-7 text-[#1F2421]/80">
+            Begin each prayer moment with the Lord&apos;s Prayer, then pray with the words of Scripture.
+            You can take a few minutes wherever you are or pray for the full shared hour.
+          </p>
         </section>
       </div>
     </main>

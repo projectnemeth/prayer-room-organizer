@@ -15,7 +15,7 @@ export function BrandLockup({ asLink = true }: { asLink?: boolean }) {
   const content = (
     <span className="inline-flex min-w-0 items-center gap-3 text-altar-teal">
       <LogoMark className="h-5 w-16 shrink-0" />
-      <span className="font-display text-lg leading-tight tracking-[0.08em] sm:text-xl">THE ALTAR INITIATIVE</span>
+      <span className="font-display text-lg leading-tight tracking-[0.08em] sm:text-xl">THE ALTAR RHYTHM</span>
     </span>
   )
 

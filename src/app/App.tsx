@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppShell } from './AppShell'
 import { PlaceholderPage } from './PlaceholderPage'
 import { appUrl } from './paths'
 import {
   DailyRhythm,
+  Initiatives,
   PublicCalendar,
   PublicHome,
+  Resources,
   ServeInterestForm,
   type ServeInterestValues,
   UpdatesSignup,
@@ -24,19 +26,6 @@ import {
   confirmUpdateSubscription,
   unsubscribeFromUpdates,
 } from '../lib/supabase'
-
-const publicPaths = {
-  calendar: '/calendar',
-  updates: '/updates',
-  serve: '/serve',
-  rhythm: '/rhythm',
-} as const
-
-function PublicHomeRoute() {
-  const navigate = useNavigate()
-
-  return <PublicHome onNavigate={(destination) => navigate(publicPaths[destination])} />
-}
 
 function VolunteerPortalRoute() {
   return (
@@ -127,8 +116,10 @@ export function App() {
   return (
     <AppShell>
       <Routes>
-        <Route index element={<PublicHomeRoute />} />
+        <Route index element={<PublicHome onSubscribe={subscribe} />} />
         <Route path="rhythm" element={<DailyRhythm />} />
+        <Route path="initiatives" element={<Initiatives onSubscribe={subscribe} />} />
+        <Route path="resources" element={<Resources onSubscribe={subscribe} />} />
         <Route path="calendar" element={<PublicCalendar />} />
         <Route path="serve" element={<ServeInterestForm onSubmitInterest={submitInterest} />} />
         <Route path="updates" element={<UpdatesSignup onSubscribe={subscribe} />} />

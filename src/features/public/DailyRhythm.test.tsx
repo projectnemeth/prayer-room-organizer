@@ -19,6 +19,8 @@ describe('DailyRhythm', () => {
 
     const weeklySection = screen.getByRole('region', { name: 'Seven days of focused intercession' });
     expect(weeklySection).toBeInTheDocument();
+    expect(weeklySection).toHaveAttribute('id', 'weekly-focus');
+    expect(screen.getByRole('region', { name: 'Praying through Scripture' })).toHaveAttribute('id', 'praying-the-scriptures');
 
     for (const item of weeklyPrayerFocusSchedule) {
       expect(
@@ -28,6 +30,7 @@ describe('DailyRhythm', () => {
         within(weeklySection).getByText(new RegExp(`${item.shortDay} · ${item.dayName}`, 'i'))
       ).toBeInTheDocument();
       expect(within(weeklySection).getByText(item.summary)).toBeInTheDocument();
+      expect(within(weeklySection).getByRole('heading', { name: item.focusTitle }).closest('article')).toHaveAttribute('id', item.resourceUrl?.slice(1));
     }
   });
 

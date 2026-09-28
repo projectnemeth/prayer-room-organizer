@@ -1,4 +1,5 @@
 import type { DayOfWeekFocus, PrayerFocus, PublicGathering } from "./types";
+import { getChurchDay } from './church-date';
 
 export const weeklyPrayerFocusSchedule: DayOfWeekFocus[] = [
   {
@@ -118,7 +119,7 @@ export function getPrayerFocusForDayOfWeek(dayOfWeek: number): PrayerFocus {
 }
 
 export function getTodayPrayerFocus(date = new Date()): PrayerFocus {
-  return getPrayerFocusForDayOfWeek(date.getDay());
+  return getPrayerFocusForDayOfWeek(getChurchDay(date).dayOfWeek);
 }
 
 export const mockPrayerFocus: PrayerFocus = getPrayerFocusForDayOfWeek(1);

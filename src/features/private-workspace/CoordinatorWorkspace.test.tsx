@@ -34,6 +34,8 @@ const shift = {
 
 describe('CoordinatorWorkspace', () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-09-04T12:00:00-06:00'))
     from.mockReset()
     rpc.mockReset()
     shift.assignments[0].roles = []
@@ -45,6 +47,8 @@ describe('CoordinatorWorkspace', () => {
       return Promise.resolve({ data: null, error: null })
     })
   })
+
+  afterEach(() => vi.useRealTimers())
 
   it('opens a selected shift in a modal and gives role-save feedback for its claimant', async () => {
     render(<CoordinatorWorkspace currentProfileId="coordinator-1" currentRole="coordinator" initialView="schedule" />)
