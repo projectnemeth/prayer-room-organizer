@@ -28,6 +28,7 @@ export function Initiatives({ onSubscribe }: InitiativesProps) {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-sage">{upcoming ? 'Upcoming initiative' : 'Current initiative'}</p>
             <h2 className="mt-3 font-serif text-3xl" id="october-heading">The ALTAR Initiative · October 1–30, 2026</h2>
             <p className="mt-5 max-w-3xl leading-7">{upcoming ? 'Beginning October 1, we will set aside time to seek Jesus together through morning and evening gatherings at the Lighthouse Prayer Room and noon prayer wherever we are.' : 'This October, we are setting aside time to seek Jesus together through morning and evening gatherings at the Lighthouse Prayer Room and noon prayer wherever we are.'}</p>
+            <p className="mt-4 max-w-3xl leading-7">Weekday Evening Altar gatherings meet from 5:00–6:00 PM Mountain Time, October 1–30, at the Lighthouse Prayer Room.</p>
             <p className="mt-4 max-w-3xl leading-7">Practice the daily rhythm with us, and make room for at least one gathering each week—in person or online when available. See the published calendar for exact dates, locations, and participation details.</p>
             <Link className="button-primary mt-7" to="/calendar">Gathering times and locations</Link>
           </div>

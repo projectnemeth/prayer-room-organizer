@@ -155,11 +155,8 @@ export const mockPublicGatherings: PublicGathering[] = altarInitiativeWeekdays.f
     id: `evening-altar-${date}`,
     kind: "evening" as const,
     title: "Evening Altar",
-    // A stable sort value only. The public interface preserves the handout's
-    // stated "time TBD" rather than presenting this placeholder as a time.
-    startsAt: `${date}T19:00:00-06:00`,
-    endsAt: `${date}T20:00:00-06:00`,
-    timeLabel: "Time to be announced",
+    startsAt: `${date}T17:00:00-06:00`,
+    endsAt: `${date}T18:00:00-06:00`,
     ...sharedGatheringDetails,
   },
 ]);
