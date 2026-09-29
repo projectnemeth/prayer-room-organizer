@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 interface UpdateSubscriptionTokenPageProps {
   action: (token: string) => Promise<boolean>;
@@ -23,8 +23,8 @@ export function UpdateSubscriptionTokenPage({ action, kind }: UpdateSubscription
   const content = kind === "confirm"
     ? {
       success: ["You’re subscribed", "Your email is confirmed. You’ll receive Altar Initiative gathering updates and daily prayer focuses."],
-      expired: ["This confirmation link is no longer active", "Request another confirmation email to subscribe to updates."],
-      error: ["We couldn’t confirm this right now", "Please try the link again in a moment, or request a new confirmation email."],
+      expired: ["This confirmation link is no longer active", "You can join the current ALTAR Rhythm email list through Kit."],
+      error: ["We couldn’t confirm this right now", "Please try the link again in a moment. You can also join the current ALTAR Rhythm email list through Kit."],
     }
     : {
       success: ["Your unsubscribe request was processed", "If this link was active, you will no longer receive Altar Initiative email updates."],
@@ -35,5 +35,5 @@ export function UpdateSubscriptionTokenPage({ action, kind }: UpdateSubscription
     ? ["One moment…", "We’re securely processing your request."]
     : content[state];
 
-  return <main className="min-h-full bg-[#F5F1E8] px-6 py-14 text-[#1F2421] sm:px-10 lg:px-16"><div aria-live="polite" className="mx-auto max-w-2xl border-t-2 border-[#B99A61] bg-white/50 p-8"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3F5F5B]">The Altar Initiative</p><h1 className="mt-4 font-serif text-4xl">{title}</h1><p className="mt-5 leading-8 text-[#1F2421]/80">{body}</p></div></main>;
+  return <main className="min-h-full bg-[#F5F1E8] px-6 py-14 text-[#1F2421] sm:px-10 lg:px-16"><div aria-live="polite" className="mx-auto max-w-2xl border-t-2 border-[#B99A61] bg-white/50 p-8"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3F5F5B]">The Altar Initiative</p><h1 className="mt-4 font-serif text-4xl">{title}</h1><p className="mt-5 leading-8 text-[#1F2421]/80">{body}</p>{kind === "confirm" && (state === "expired" || state === "error") ? <Link className="focus-ring mt-6 inline-block font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" to="/updates">Join the ALTAR Rhythm email list</Link> : null}</div></main>;
 }

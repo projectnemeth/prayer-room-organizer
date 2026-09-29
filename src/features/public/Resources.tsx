@@ -1,12 +1,6 @@
 import { Link } from 'react-router-dom'
 import { UpdatesSignupForm } from './UpdatesSignup'
-import type { UpdatesSignupValues } from './types'
-
-interface ResourcesProps {
-  onSubscribe?: (values: UpdatesSignupValues) => Promise<void>
-}
-
-export function Resources({ onSubscribe }: ResourcesProps) {
+export function Resources() {
   return (
     <main className="bg-altar-parchment px-6 py-14 text-altar-ink sm:px-10 lg:px-16">
       <div className="mx-auto max-w-5xl">
@@ -32,9 +26,9 @@ export function Resources({ onSubscribe }: ResourcesProps) {
         <section aria-labelledby="resources-updates-heading" className="mt-14 grid gap-8 border-t border-altar-stone pt-10 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <h2 className="font-serif text-3xl" id="resources-updates-heading">Carry the Rhythm Into Your Day</h2>
-            <p className="mt-4 leading-7">Sign up for Altar Initiative gathering updates and notices when new prayer resources are available.</p>
+            <p className="mt-4 leading-7">Receive prayer resources, encouragement, and invitations to help you cultivate a life of morning, noon, and evening prayer.</p>
           </div>
-          <UpdatesSignupForm onSubscribe={onSubscribe} />
+          <UpdatesSignupForm />
         </section>
       </div>
     </main>

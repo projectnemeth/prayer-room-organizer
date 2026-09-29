@@ -7,7 +7,7 @@
 **Source:** [ALTAR RHYTHM Website (Andrew)](https://app.notion.com/p/anthemministries/ALTAR-RHYTHM-Website-Andrew-3e615fd940ff8076a26ec34226ec6353), including its linked Home, Rhythm, Initiatives, Resources, Plant, and email embed pages.
 **Target:** The React/Vite public site in this repository. This document specifies changes; it does not authorize a production deployment.
 
-**Implementation progress (2026-09-28):** The public brand and four-page navigation, five-section Home, Rhythm anchors and teaching, Initiatives and Resources pages, and shared Denver-local day helper are implemented. The Home headline, signup jump, prayer card layout, playlist card, and signup palette reflect the browser review. The existing confirmed Altar Initiative updates form is reused. The published gatherings projection remains the source for event previews. The October initiative and its 30-playlist cycle end on **October 30**, as confirmed in review; no October 31 playlist is planned. Psalm assignments, 60 playlist URLs, live Zoom URL, Kit migration, bookmark, short links, and domain changes remain pending. Deployment status should be checked in GitHub and Cloudflare.
+**Implementation progress (2026-09-28):** The public brand and four-page navigation, five-section Home, Rhythm anchors and teaching, Initiatives and Resources pages, and shared Denver-local day helper are implemented. The Home headline, signup jump, prayer card layout, playlist card, and signup palette reflect the browser review. The public signup now embeds the supplied Kit form in the local code; a complete Kit confirmation, delivery, and unsubscribe test and production deployment remain pending. Existing Supabase subscribers remain separate, and their token routes are preserved. The published gatherings projection remains the source for event previews. The October initiative and its 30-playlist cycle end on **October 30**, as confirmed in review; no October 31 playlist is planned. Psalm assignments, 60 playlist URLs, live Zoom URL, bookmark, short links, and domain changes remain pending.
 
 ## Product direction
 
@@ -32,7 +32,7 @@ The proposed primary navigation is **Home · Rhythm · Initiatives · Resources*
 | Daily focus | Home reads the **latest published** focus, while the Rhythm page uses the browser's local weekday. October focuses are seeded by date. | Both pages show the focus for **today in America/Denver**, with one approved set of weekday names and descriptions. |
 | Scripture | Rhythm currently shows weekly focuses only. | Full monthly Psalm reading schedule, morning/noon/evening assignments, optional daily noon Proverb, and the Lord's Prayer. |
 | Gatherings | Public-safe Supabase event projection and calendar exist. | Initiatives page gives campaign context, times, locations, online/in-person details, and signup links; homepage links there. |
-| Updates | `/updates` uses a Supabase double opt-in flow and Resend delivery. | Reusable Kit signup, plus a bookmark email offer once its asset and delivery are ready. |
+| Updates | The original `/updates` used a Supabase double opt-in flow and Resend delivery. | Public pages now reuse the Kit form; the bookmark offer waits for its asset and delivery automation. |
 | Resources | No public Resources route. | Playlists, wristbands, teachings, courses, and downloads with actual destinations. |
 | Domains | Repository documents `altar.lighthouseprayerroom.org` as the site/auth origin. | `altarrhythm.com` as canonical public domain; `altar.day/...` as managed short links. |
 

@@ -9,7 +9,7 @@
 | Database | PostgreSQL through Supabase | Relational scheduling data, managed backups, and row-level security. |
 | Authentication | Supabase Auth with invitation-only access | Fits the approved-volunteer model and avoids open account creation. |
 | Authorization | Application roles plus PostgreSQL row-level security | Enforces the public / volunteer / coordinator boundary at both layers. |
-| Email | Resend | Transactional confirmations and scheduled reminders; the only new communications vendor in the MVP. |
+| Email | Kit for new public marketing signups; Resend for operational and legacy mail | Keeps the public marketing list separate from volunteer reminders and existing Supabase confirmation links. |
 | SMS | Deferred | Add an opt-in SMS provider only after the pilot shows email reminders are insufficient. |
 | Background work | Supabase Cron + Edge Function + durable job table | Delivers time-sensitive reminders without relying on a hosting-plan cron cadence. |
 | Hosting | Existing shared web host | Serves the built static front end at an Altar Initiative subdomain or path. |
@@ -25,7 +25,7 @@ Public site
   /calendar                 Public gatherings
   /rhythm                   Morning / noon / evening rhythm and daily focus
   /serve                    Interest form
-  /updates                  Email updates consent form
+  /updates                  Kit email signup; old token routes retained
 
 Authenticated portal
   /portal                   Volunteer home and upcoming shifts
@@ -71,8 +71,8 @@ Keep message content limited to scheduling and initiative communications. Do not
 
 ## Notification design
 
-- Public updates use double opt-in: store a name and a hashed, expiring confirmation token, and do not set `updates_opt_in` until its recipient confirms. Store only hashed unsubscribe tokens, and never let a direct public form re-enable an opted-out address. Confirmed subscriber names and emails are visible only to active administrators (and never to public visitors, volunteers, or coordinators).
-- Run the public update request, confirmation, and unsubscribe paths as narrow, rate-limited Edge Functions. Keep Resend credentials, source-rate-limit pepper, and token hashing server-side.
+- New public marketing signups use the embedded Kit form. The legacy Supabase list remains separate: its original double opt-in stored hashed confirmation and unsubscribe tokens and never activated an address before confirmation. Confirmed legacy names and emails are visible only to active administrators (and never to public visitors, volunteers, or coordinators). Existing token links remain functional.
+- Retire the old public update request Edge Function after the Kit site is live, while keeping the token-based confirmation and unsubscribe functions for old links. Keep legacy Resend credentials and token hashing server-side.
 - Use a job record with idempotency keys before attempting delivery, so scheduler retries cannot duplicate reminders. Resend accepts an idempotency key for email sends.
 - Store provider IDs and delivery status, not more message content than operationally necessary.
 - Send reminders according to configurable templates: assignment confirmation, one-week reminder, 24-hour reminder, unconfirmed shift alert, and coverage request.

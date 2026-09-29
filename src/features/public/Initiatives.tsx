@@ -1,13 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useChurchDay } from './useChurchDay'
 import { UpdatesSignupForm } from './UpdatesSignup'
-import type { UpdatesSignupValues } from './types'
-
-interface InitiativesProps {
-  onSubscribe?: (values: UpdatesSignupValues) => Promise<void>
-}
-
-export function Initiatives({ onSubscribe }: InitiativesProps) {
+export function Initiatives() {
   const { dateKey } = useChurchDay()
   const upcoming = dateKey < '2026-10-01'
   const active = dateKey >= '2026-10-01' && dateKey <= '2026-10-30'
@@ -57,9 +51,9 @@ export function Initiatives({ onSubscribe }: InitiativesProps) {
         <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <h2 className="font-serif text-3xl" id="updates-heading">Carry the Rhythm Into Your Day</h2>
-            <p className="mt-4 leading-7">Sign up for Altar Initiative gathering updates and notices when new prayer resources are available.</p>
+            <p className="mt-4 leading-7">Receive prayer resources, encouragement, and invitations to help you cultivate a life of morning, noon, and evening prayer.</p>
           </div>
-          <UpdatesSignupForm onSubscribe={onSubscribe} />
+          <UpdatesSignupForm />
         </div>
       </section>
     </main>

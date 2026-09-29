@@ -18,5 +18,4 @@ export type {
   PrayerFocus,
   PublicGathering,
   ServeInterestValues,
-  UpdatesSignupValues,
 } from "./types";

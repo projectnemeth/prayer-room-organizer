@@ -5,12 +5,11 @@ import { getPrayerFocusForDayOfWeek } from './mock-data'
 import { getDailyPlaylist, getDailyPsalmAssignments, participationLinks } from './daily-content'
 import { UpdatesSignupForm } from './UpdatesSignup'
 import { useChurchDay } from './useChurchDay'
-import type { PrayerFocus, PublicGathering, UpdatesSignupValues } from './types'
+import type { PrayerFocus, PublicGathering } from './types'
 
 interface PublicHomeProps {
   focus?: PrayerFocus
   gatherings?: PublicGathering[]
-  onSubscribe?: (values: UpdatesSignupValues) => Promise<void>
 }
 
 interface PublicEventRow {
@@ -47,7 +46,7 @@ function formatGathering(gathering: PublicGathering) {
 }
 
 /** Visitor-safe landing page. Daily teaching comes from the shared Denver-local weekly schedule. */
-export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGatherings, onSubscribe }: PublicHomeProps) {
+export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGatherings }: PublicHomeProps) {
   const churchDay = useChurchDay()
   const focus = suppliedFocus ?? getPrayerFocusForDayOfWeek(churchDay.dayOfWeek)
   const [gatherings, setGatherings] = useState<PublicGathering[]>(suppliedGatherings ?? [])
@@ -196,7 +195,7 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
             <h2 className="font-serif text-3xl" id="home-updates-heading">Carry the Rhythm Into Your Day</h2>
             <p className="mt-4 leading-7 text-altar-parchment/85">Receive prayer resources, encouragement, and invitations to help you cultivate a life of morning, noon, and evening prayer.</p>
           </div>
-          <div className="text-altar-ink"><UpdatesSignupForm onSubscribe={onSubscribe} /></div>
+          <div className="text-altar-ink"><UpdatesSignupForm /></div>
         </div>
       </section>
     </main>

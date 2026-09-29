@@ -11,14 +11,6 @@ export interface ServeInterestSubmission {
   notes?: string;
 }
 
-/** Schema-aligned payload for the public updates opt-in form. */
-export interface UpdatesSubscription {
-  name: string;
-  email: string;
-  /** Honeypot only; a filled value is accepted without sending an email. */
-  website?: string;
-}
-
 function requiredText(value: string, field: string): string {
   const normalized = value.trim();
   if (!normalized) {
@@ -68,24 +60,6 @@ export async function submitServeInterest(
 
   if (error) {
     throw new Error(`Unable to send service interest: ${error.message}`);
-  }
-}
-
-/** Starts a double-opt-in request through a public, rate-limited Edge Function. */
-export async function subscribeToUpdates(
-  client: SupabaseClient,
-  subscription: UpdatesSubscription,
-): Promise<void> {
-  const { error } = await client.functions.invoke("request-update-subscription", {
-    body: {
-      name: requiredText(subscription.name, "Name"),
-      email: email(subscription.email),
-      website: optionalText(subscription.website) ?? "",
-    },
-  });
-
-  if (error) {
-    throw new Error("We could not start your email confirmation. Please try again shortly.");
   }
 }
 

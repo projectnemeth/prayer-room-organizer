@@ -27,4 +27,4 @@ React + TypeScript built as static files on the existing shared host; Supabase f
 
 ## Communications setup
 
-Volunteer reminders and the double-opt-in public updates form use Supabase Edge Functions with server-only Resend credentials. See [communications operations](docs/communications-operations.md) before deploying those functions or scheduling the reminder worker.
+The public signup on Home, Initiatives, Resources, and `/updates` embeds the published Kit form. Kit manages new marketing subscribers; the site does not use a Kit API key. Supabase and Resend still handle volunteer reminders and previously issued update confirmation/unsubscribe links. Existing confirmed Supabase subscribers remain in their separate legacy list. See [communications operations](docs/communications-operations.md) for the provider boundaries and legacy workflow.

@@ -55,8 +55,8 @@ export function UpdateSubscribers() {
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Administrator workspace</p>
       <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-display text-3xl text-altar-ink" id="update-subscribers-heading">Email updates</h2>
-          <p className="mt-3 max-w-3xl leading-7 text-altar-ink/75">Confirmed subscribers only. People who have not confirmed or who unsubscribed are not included.</p>
+          <h2 className="font-display text-3xl text-altar-ink" id="update-subscribers-heading">Legacy email updates</h2>
+          <p className="mt-3 max-w-3xl leading-7 text-altar-ink/75">This list contains confirmed subscribers from the previous Supabase signup. New ALTAR Rhythm signups are managed in Kit and do not appear here. People who have not confirmed or who unsubscribed are not included.</p>
         </div>
         <button className="button-primary" disabled={isLoading || subscribers.length === 0} onClick={() => downloadSubscribers(subscribers)} type="button">Download confirmed list</button>
       </div>

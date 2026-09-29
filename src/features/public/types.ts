@@ -45,9 +45,3 @@ export interface ServeInterestValues {
   servingInterests: string[];
   note: string;
 }
-
-export interface UpdatesSignupValues {
-  name: string;
-  email: string;
-  website?: string;
-}

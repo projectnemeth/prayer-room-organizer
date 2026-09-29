@@ -13,7 +13,6 @@ import {
   type ServeInterestValues,
   UpdatesSignup,
   UpdateSubscriptionTokenPage,
-  type UpdatesSignupValues,
 } from '../features/public'
 import { InvitationSignIn, PrivateAccessBoundary } from '../features/access'
 import { CoordinatorWorkspace, VolunteerSchedule } from '../features/private-workspace'
@@ -22,7 +21,6 @@ import {
   hasSupabaseBrowserConfig,
   requestInvitationMagicLink,
   submitServeInterest,
-  subscribeToUpdates,
   confirmUpdateSubscription,
   unsubscribeFromUpdates,
 } from '../lib/supabase'
@@ -107,22 +105,19 @@ export function App() {
     })
   }
 
-  const subscribe = async (values: UpdatesSignupValues) => {
-    await subscribeToUpdates(getSupabaseBrowserClient(), { name: values.name, email: values.email, website: values.website })
-  }
   const confirmUpdates = async (token: string) => confirmUpdateSubscription(getSupabaseBrowserClient(), token)
   const unsubscribeUpdates = async (token: string) => unsubscribeFromUpdates(getSupabaseBrowserClient(), token)
 
   return (
     <AppShell>
       <Routes>
-        <Route index element={<PublicHome onSubscribe={subscribe} />} />
+        <Route index element={<PublicHome />} />
         <Route path="rhythm" element={<DailyRhythm />} />
-        <Route path="initiatives" element={<Initiatives onSubscribe={subscribe} />} />
-        <Route path="resources" element={<Resources onSubscribe={subscribe} />} />
+        <Route path="initiatives" element={<Initiatives />} />
+        <Route path="resources" element={<Resources />} />
         <Route path="calendar" element={<PublicCalendar />} />
         <Route path="serve" element={<ServeInterestForm onSubmitInterest={submitInterest} />} />
-        <Route path="updates" element={<UpdatesSignup onSubscribe={subscribe} />} />
+        <Route path="updates" element={<UpdatesSignup />} />
         <Route path="updates/confirm" element={<UpdateSubscriptionTokenPage action={confirmUpdates} kind="confirm" />} />
         <Route path="updates/unsubscribe" element={<UpdateSubscriptionTokenPage action={unsubscribeUpdates} kind="unsubscribe" />} />
         <Route path="access" element={<AccessRoute />} />

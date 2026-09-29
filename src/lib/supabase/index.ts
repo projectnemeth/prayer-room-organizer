@@ -17,9 +17,7 @@ export {
 } from "./config";
 export {
   submitServeInterest,
-  subscribeToUpdates,
   confirmUpdateSubscription,
   unsubscribeFromUpdates,
   type ServeInterestSubmission,
-  type UpdatesSubscription,
 } from "./public-submissions";
