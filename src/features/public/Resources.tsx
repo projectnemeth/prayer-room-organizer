@@ -25,7 +25,7 @@ export function Resources() {
 
         <section aria-labelledby="resources-updates-heading" className="mt-14 grid gap-8 border-t border-altar-stone pt-10 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <h2 className="font-serif text-3xl" id="resources-updates-heading">Carry the Rhythm Into Your Day</h2>
+            <h2 className="font-serif text-3xl" id="resources-updates-heading">Stay in the Rhythm</h2>
             <p className="mt-4 leading-7">Receive prayer resources, encouragement, and invitations to help you cultivate a life of morning, noon, and evening prayer.</p>
           </div>
           <UpdatesSignupForm />

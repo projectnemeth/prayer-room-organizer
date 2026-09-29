@@ -31,8 +31,7 @@ export function UpdatesSignupForm() {
     <div className="border-t-2 border-altar-gold bg-altar-parchment p-6 text-altar-ink shadow-sm sm:p-8">
       <div ref={embedRef} />
       <p className="mt-4 text-xs leading-5 text-altar-ink/70">Join the ALTAR Rhythm email list for prayer resources, encouragement, and invitations. Kit will ask you to confirm your email. You can unsubscribe from its emails at any time.</p>
-      {embedFailed ? <p className="mt-4 text-sm text-[#9A3412]" role="alert">The signup form could not load here. You can open it directly in Kit.</p> : null}
-      <a className="focus-ring mt-4 inline-block text-sm font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" href={kitFormUrl}>Open the signup form in Kit</a>
+      {embedFailed ? <p className="mt-4 text-sm text-[#9A3412]" role="alert">The signup form could not load here. <a className="focus-ring font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" href={kitFormUrl}>Open the signup form in Kit</a>.</p> : null}
     </div>
   )
 }
@@ -43,7 +42,7 @@ export function UpdatesSignup() {
       <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-[0.85fr_1.15fr]">
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-altar-teal">Stay connected</p>
-          <h1 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">Carry the Rhythm Into Your Day</h1>
+          <h1 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">Stay in the Rhythm</h1>
           <p className="mt-5 text-lg leading-8 text-altar-ink/80">Receive prayer resources, encouragement, and invitations to help you cultivate a life of morning, noon, and evening prayer.</p>
         </header>
         <UpdatesSignupForm />

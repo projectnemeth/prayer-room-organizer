@@ -50,7 +50,7 @@ export function Initiatives() {
       <section aria-labelledby="updates-heading" className="bg-altar-stone/40 px-6 py-14 sm:px-10 lg:px-16">
         <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <h2 className="font-serif text-3xl" id="updates-heading">Carry the Rhythm Into Your Day</h2>
+            <h2 className="font-serif text-3xl" id="updates-heading">Stay in the Rhythm</h2>
             <p className="mt-4 leading-7">Receive prayer resources, encouragement, and invitations to help you cultivate a life of morning, noon, and evening prayer.</p>
           </div>
           <UpdatesSignupForm />

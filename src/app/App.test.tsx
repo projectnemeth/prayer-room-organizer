@@ -42,7 +42,7 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'The ALTAR Rhythm' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Join the rhythm' })).toHaveAttribute('href', '#carry-the-rhythm')
-    expect(screen.getByRole('region', { name: 'Carry the Rhythm Into Your Day' })).toHaveAttribute('id', 'carry-the-rhythm')
+    expect(screen.getByRole('region', { name: 'Stay in the Rhythm' })).toHaveAttribute('id', 'carry-the-rhythm')
     expect(screen.getByRole('button', { name: 'Join live on Zoom' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Spotify playlist' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Apple Music playlist' })).toBeDisabled()

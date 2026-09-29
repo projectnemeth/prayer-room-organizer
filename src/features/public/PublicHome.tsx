@@ -192,7 +192,7 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
       <section aria-labelledby="home-updates-heading" className="scroll-mt-6 bg-altar-ink px-6 py-16 text-altar-parchment sm:px-10 lg:px-16" id="carry-the-rhythm" tabIndex={-1}>
         <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <h2 className="font-serif text-3xl" id="home-updates-heading">Carry the Rhythm Into Your Day</h2>
+            <h2 className="font-serif text-3xl" id="home-updates-heading">Stay in the Rhythm</h2>
             <p className="mt-4 leading-7 text-altar-parchment/85">Receive prayer resources, encouragement, and invitations to help you cultivate a life of morning, noon, and evening prayer.</p>
           </div>
           <div className="text-altar-ink"><UpdatesSignupForm /></div>
