@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DailyRhythm } from './DailyRhythm';
 import {
   getPrayerFocusForDayOfWeek,
@@ -69,5 +69,22 @@ describe('DailyRhythm', () => {
 
     expect(screen.getByRole('heading', { name: 'Custom Focus Title' })).toBeInTheDocument();
     expect(screen.getByText('Custom Focus Summary')).toBeInTheDocument();
+  });
+
+  it('shows the full repeating reading schedule and the current day', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-11-14T18:00:00Z'));
+      render(<DailyRhythm />);
+      const scriptures = within(screen.getByRole('region', { name: 'Praying through Scripture' }));
+      const today = within(scriptures.getByRole('heading', { name: "Day 14 · Today's readings" }).closest('div')!);
+      expect(today.getByText('Psalm 68 · Proverbs 14')).toBeInTheDocument();
+      const table = within(scriptures.getByRole('table'));
+      expect(table.getAllByRole('row')).toHaveLength(32);
+      expect(within(table.getByRole('rowheader', { name: '30' }).closest('tr')!).getByText('Psalms 149–150')).toBeInTheDocument();
+      expect(within(table.getByRole('rowheader', { name: '31' }).closest('tr')!).getByText('Catch up or reflect · no new reading')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -11,14 +11,26 @@ const playlistLinksByDay: Partial<Record<number, PlaylistLinks>> = {
   // 1: { spotify: 'https://open.spotify.com/playlist/...', appleMusic: 'https://music.apple.com/...' },
 }
 
-interface PsalmAssignments {
+interface ScriptureAssignment {
+  day: number
   morning: string
   noon: string
   evening: string
+  proverb: string
 }
 
-/** The approved 1–31 Psalm plan can be entered here when supplied. */
-const psalmAssignmentsByDay: Partial<Record<number, PsalmAssignments>> = {}
+/** Repeat the approved five-Psalm cycle on calendar days 1–30 of every month. */
+export const monthlyScriptureSchedule: ScriptureAssignment[] = Array.from({ length: 30 }, (_, index) => {
+  const day = index + 1
+  const firstPsalm = index * 5 + 1
+  return {
+    day,
+    morning: `Psalms ${firstPsalm}–${firstPsalm + 1}`,
+    noon: `Psalm ${firstPsalm + 2}`,
+    evening: `Psalms ${firstPsalm + 3}–${firstPsalm + 4}`,
+    proverb: `Proverbs ${day}`,
+  }
+})
 
 function approvedLink(value: string | undefined, host: string) {
   if (!value) return undefined
@@ -42,6 +54,6 @@ export function getDailyPlaylist(dateKey: string) {
   }
 }
 
-export function getDailyPsalmAssignments(dayOfMonth: number) {
-  return psalmAssignmentsByDay[dayOfMonth]
+export function getDailyScriptureAssignment(dayOfMonth: number) {
+  return Number.isInteger(dayOfMonth) ? monthlyScriptureSchedule[dayOfMonth - 1] : undefined
 }

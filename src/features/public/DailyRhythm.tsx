@@ -1,3 +1,4 @@
+import { getDailyScriptureAssignment, monthlyScriptureSchedule } from './daily-content';
 import { getPrayerFocusForDayOfWeek, weeklyPrayerFocusSchedule } from "./mock-data";
 import type { PrayerFocus } from "./types";
 import { useChurchDay } from './useChurchDay';
@@ -29,6 +30,7 @@ const rhythmMoments = [
 
 export function DailyRhythm({ focus }: DailyRhythmProps) {
   const churchDay = useChurchDay();
+  const scripture = getDailyScriptureAssignment(churchDay.dayOfMonth);
   const currentFocus = focus ?? getPrayerFocusForDayOfWeek(churchDay.dayOfWeek);
   const currentDayOfWeek = churchDay.dayOfWeek;
 
@@ -122,14 +124,58 @@ export function DailyRhythm({ focus }: DailyRhythmProps) {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6F8580]">The Scriptures that shape our prayers</p>
           <h2 id="scriptures-heading" className="mt-2 font-serif text-3xl">Praying through Scripture</h2>
           <p className="mt-4 max-w-3xl leading-7 text-[#1F2421]/80">
-            The Psalms give us words for morning, noon, and evening prayer. We follow a monthly rhythm,
-            returning to the beginning of the reading cycle with each new month. At noon, you may also
-            read the Proverb that matches the day of the month. Today is day {churchDay.dayOfMonth} of that cycle.
+            Read five Psalms each day: two in the morning, one at noon, and two in the evening.
+            Read the chapter of Proverbs that matches the calendar day at noon. This cycle restarts
+            with Psalm 1 and Proverbs 1 on the first day of every month.
           </p>
           <p className="mt-4 max-w-3xl leading-7 text-[#1F2421]/80">
             Begin each prayer moment with the Lord&apos;s Prayer, then pray with the words of Scripture.
             You can take a few minutes wherever you are or pray for the full shared hour.
           </p>
+          <div className="mt-7 border-t-2 border-[#B99A61] bg-white/55 p-6">
+            <h3 className="font-serif text-2xl">Day {churchDay.dayOfMonth} · Today&apos;s readings</h3>
+            {scripture ? (
+              <ul className="mt-4 space-y-2 leading-7">
+                <li><strong>Morning:</strong> {scripture.morning}</li>
+                <li><strong>Noon:</strong> {scripture.noon} · {scripture.proverb}</li>
+                <li><strong>Evening:</strong> {scripture.evening}</li>
+              </ul>
+            ) : (
+              <p className="mt-4 leading-7">Catch up on missed readings or reflect on what you’ve read. No new Psalm or Proverb is assigned on day 31.</p>
+            )}
+          </div>
+          <h3 className="mt-10 font-serif text-2xl">Monthly reading schedule</h3>
+          <p className="mt-3 max-w-3xl leading-7 text-[#1F2421]/80">
+            Follow the dates your month has. On the 31st, catch up or reflect; after a shorter month,
+            begin again with day 1.
+          </p>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
+              <caption className="sr-only">Psalms and Proverbs for days 1 through 30, with day 31 for catch-up or reflection</caption>
+              <thead className="bg-[#3F5F5B] text-[#F5F1E8]">
+                <tr>
+                  <th className="px-4 py-3" scope="col">Day</th>
+                  <th className="px-4 py-3" scope="col">Morning</th>
+                  <th className="px-4 py-3" scope="col">Noon</th>
+                  <th className="px-4 py-3" scope="col">Evening</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthlyScriptureSchedule.map((assignment) => (
+                  <tr className={assignment.day === churchDay.dayOfMonth ? 'bg-[#B99A61]/25' : 'odd:bg-white/60'} key={assignment.day}>
+                    <th className="border-b border-[#D9D3C6] px-4 py-3" scope="row">{assignment.day}</th>
+                    <td className="border-b border-[#D9D3C6] px-4 py-3">{assignment.morning}</td>
+                    <td className="border-b border-[#D9D3C6] px-4 py-3">{assignment.noon} · {assignment.proverb}</td>
+                    <td className="border-b border-[#D9D3C6] px-4 py-3">{assignment.evening}</td>
+                  </tr>
+                ))}
+                <tr className={churchDay.dayOfMonth === 31 ? 'bg-[#B99A61]/25' : 'bg-white/60'}>
+                  <th className="px-4 py-3" scope="row">31</th>
+                  <td className="px-4 py-3" colSpan={3}>Catch up or reflect · no new reading</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     </main>

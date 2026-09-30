@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { vi } from 'vitest'
 import { App } from './App'
@@ -54,6 +54,26 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Initiatives' })).toHaveAttribute('href', '/initiatives')
     expect(screen.getByRole('link', { name: 'Resources' })).toHaveAttribute('href', '/resources')
     expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/coordinator')
+  })
+
+  it('shows matching daily readings and uses the 31st for reflection', () => {
+    vi.setSystemTime(new Date('2026-10-05T18:00:00Z'))
+    const { unmount } = render(<MemoryRouter><App /></MemoryRouter>)
+    const prayers = within(screen.getByRole('heading', { name: 'Pray with the words of Scripture' }).closest('article')!)
+    expect(prayers.getByText('Psalms 21–22')).toBeInTheDocument()
+    expect(prayers.getByText('Psalm 23 · Proverbs 5')).toBeInTheDocument()
+    expect(prayers.getByText('Psalms 24–25')).toBeInTheDocument()
+    unmount()
+
+    vi.setSystemTime(new Date('2026-10-31T18:00:00Z'))
+    const reflection = render(<MemoryRouter><App /></MemoryRouter>)
+    expect(screen.getByText(/Day 31 is for catching up/)).toBeInTheDocument()
+    expect(screen.queryByText(/Proverbs 31/)).not.toBeInTheDocument()
+    reflection.unmount()
+
+    vi.setSystemTime(new Date('2026-11-01T18:00:00Z'))
+    render(<MemoryRouter><App /></MemoryRouter>)
+    expect(screen.getByText('Psalm 3 · Proverbs 1')).toBeInTheDocument()
   })
 
   it('renders the public Initiatives and Resources routes', () => {

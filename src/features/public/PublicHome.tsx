@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getSupabaseBrowserClient } from '../../lib/supabase'
 import { getPrayerFocusForDayOfWeek } from './mock-data'
-import { getDailyPlaylist, getDailyPsalmAssignments, participationLinks } from './daily-content'
+import { getDailyPlaylist, getDailyScriptureAssignment, participationLinks } from './daily-content'
 import { UpdatesSignupForm } from './UpdatesSignup'
 import { useChurchDay } from './useChurchDay'
 import type { PrayerFocus, PublicGathering } from './types'
@@ -54,7 +54,7 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
   const octoberVisible = churchDay.dateKey <= '2026-10-30'
   const octoberUpcoming = churchDay.dateKey < '2026-10-01'
   const playlist = getDailyPlaylist(churchDay.dateKey)
-  const psalms = getDailyPsalmAssignments(churchDay.dayOfMonth)
+  const scripture = getDailyScriptureAssignment(churchDay.dayOfMonth)
 
   useEffect(() => {
     if (suppliedGatherings) return
@@ -128,11 +128,15 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Today&apos;s prayers</p>
               <h3 className="mt-3 font-serif text-2xl">Pray with the words of Scripture</h3>
               <p className="mt-4 leading-7">Begin each time of prayer with the Lord&apos;s Prayer, then pray with the words of Scripture—morning, noon, and evening.</p>
-              <ul className="mt-5 space-y-2 leading-7">
-                <li><span aria-hidden="true">🌅</span> <strong>Morning:</strong> {psalms?.morning ?? 'Psalm assignment coming soon'}</li>
-                <li><span aria-hidden="true">☀️</span> <strong>Noon:</strong> {psalms?.noon ?? 'Psalm assignment coming soon'} · Proverbs {churchDay.dayOfMonth}</li>
-                <li><span aria-hidden="true">🌆</span> <strong>Evening:</strong> {psalms?.evening ?? 'Psalm assignment coming soon'}</li>
-              </ul>
+              {scripture ? (
+                <ul className="mt-5 space-y-2 leading-7">
+                  <li><span aria-hidden="true">🌅</span> <strong>Morning:</strong> {scripture.morning}</li>
+                  <li><span aria-hidden="true">☀️</span> <strong>Noon:</strong> {scripture.noon} · {scripture.proverb}</li>
+                  <li><span aria-hidden="true">🌆</span> <strong>Evening:</strong> {scripture.evening}</li>
+                </ul>
+              ) : (
+                <p className="mt-5 leading-7">Day 31 is for catching up on missed readings or reflecting on what you’ve read. No new Psalm or Proverb is assigned.</p>
+              )}
               <Link className="focus-ring mt-5 inline-block font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" to="/rhythm#praying-the-scriptures">Explore the prayers</Link>
             </article>
             {octoberVisible && <article className="border-t-2 border-altar-gold bg-white/55 p-7 md:col-span-2">
