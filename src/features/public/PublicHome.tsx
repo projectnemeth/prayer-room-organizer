@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getSupabaseBrowserClient } from '../../lib/supabase'
 import { getPrayerFocusForDayOfWeek } from './mock-data'
-import { getDailyPlaylist, getDailyScriptureAssignment, participationLinks } from './daily-content'
+import { getDailyScriptureAssignment, participationLinks } from './daily-content'
+import { PlaylistPlayer } from './PlaylistPlayer'
 import { UpdatesSignupForm } from './UpdatesSignup'
 import { useChurchDay } from './useChurchDay'
 import type { PrayerFocus, PublicGathering } from './types'
@@ -53,7 +54,6 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
   const [loadError, setLoadError] = useState(false)
   const octoberVisible = churchDay.dateKey <= '2026-10-30'
   const octoberUpcoming = churchDay.dateKey < '2026-10-01'
-  const playlist = getDailyPlaylist(churchDay.dateKey)
   const scripture = getDailyScriptureAssignment(churchDay.dayOfMonth)
 
   useEffect(() => {
@@ -139,16 +139,12 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
               )}
               <Link className="focus-ring mt-5 inline-block font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" to="/rhythm#praying-the-scriptures">Explore the prayers</Link>
             </article>
-            {octoberVisible && <article className="border-t-2 border-altar-gold bg-white/55 p-7 md:col-span-2">
+            <article className="border-t-2 border-altar-gold bg-white/55 p-7 md:col-span-2">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Today&apos;s playlist</p>
               <h3 className="mt-3 font-serif text-2xl">Worship throughout the day</h3>
               <p className="mt-4 leading-7">Worship and instrumental to accompany morning, noon, and evening prayer.</p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                {playlist.spotify ? <a className="button-primary" href={playlist.spotify} rel="noopener noreferrer" target="_blank">Spotify playlist</a> : <button className="button-primary cursor-not-allowed opacity-60" disabled type="button">Spotify playlist</button>}
-                {playlist.appleMusic ? <a className="button-primary" href={playlist.appleMusic} rel="noopener noreferrer" target="_blank">Apple Music playlist</a> : <button className="button-primary cursor-not-allowed opacity-60" disabled type="button">Apple Music playlist</button>}
-              </div>
-              {(!playlist.spotify || !playlist.appleMusic) && <p className="mt-3 text-sm text-altar-ink/65">{octoberUpcoming ? 'Daily playlists begin October 1.' : 'Playlist links for today are coming soon.'}</p>}
-            </article>}
+              <PlaylistPlayer day={churchDay.dayOfMonth} />
+            </article>
           </div>
         </div>
       </section>

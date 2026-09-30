@@ -1,15 +1,16 @@
-/** Fill these editorial links for days 1–30 as they are approved. */
-interface PlaylistLinks {
+import playlistLinks from './playlist-links.json'
+
+export interface PlaylistLinks {
   spotify?: string
+  spotifyEmbed?: string
   appleMusic?: string
+  appleMusicEmbed?: string
 }
 
 /** Add the public meeting URL when it is ready to share. */
 export const participationLinks: { liveZoom?: string } = {}
 
-const playlistLinksByDay: Partial<Record<number, PlaylistLinks>> = {
-  // 1: { spotify: 'https://open.spotify.com/playlist/...', appleMusic: 'https://music.apple.com/...' },
-}
+const playlistLinksByDay: Partial<Record<number, PlaylistLinks>> = playlistLinks
 
 interface ScriptureAssignment {
   day: number
@@ -42,16 +43,19 @@ function approvedLink(value: string | undefined, host: string) {
   }
 }
 
-export function isPlaylistDate(dateKey: string) {
-  return dateKey >= '2026-10-01' && dateKey <= '2026-10-30'
+/** Daily playlists repeat on calendar days 1–31 of every month. */
+export function getPlaylistForDay(day: number): PlaylistLinks {
+  const links = Number.isInteger(day) && day >= 1 && day <= 31 ? playlistLinksByDay[day] : undefined
+  return {
+    spotify: approvedLink(links?.spotify, 'open.spotify.com'),
+    spotifyEmbed: approvedLink(links?.spotifyEmbed, 'open.spotify.com'),
+    appleMusic: approvedLink(links?.appleMusic, 'music.apple.com'),
+    appleMusicEmbed: approvedLink(links?.appleMusicEmbed, 'embed.music.apple.com'),
+  }
 }
 
 export function getDailyPlaylist(dateKey: string) {
-  const links = isPlaylistDate(dateKey) ? playlistLinksByDay[Number(dateKey.slice(-2))] : undefined
-  return {
-    spotify: approvedLink(links?.spotify, 'open.spotify.com'),
-    appleMusic: approvedLink(links?.appleMusic, 'music.apple.com'),
-  }
+  return getPlaylistForDay(Number(dateKey.slice(-2)))
 }
 
 export function getDailyScriptureAssignment(dayOfMonth: number) {

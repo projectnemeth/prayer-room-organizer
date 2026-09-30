@@ -44,7 +44,7 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Join the rhythm' })).toHaveAttribute('href', '#carry-the-rhythm')
     expect(screen.getByRole('region', { name: 'Stay in the Rhythm' })).toHaveAttribute('id', 'carry-the-rhythm')
     expect(screen.getByRole('button', { name: 'Join live on Zoom' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Spotify playlist' })).toBeDisabled()
+    expect(screen.getByRole('link', { name: 'Spotify playlist' })).toHaveAttribute('href', expect.stringContaining('https://open.spotify.com/playlist/'))
     expect(screen.getByRole('button', { name: 'Apple Music playlist' })).toBeDisabled()
     expect(screen.getByRole('link', { name: 'THE ALTAR RHYTHM' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Gathering times and locations' })).toHaveAttribute('href', '/initiatives')
@@ -68,6 +68,7 @@ describe('App', () => {
     vi.setSystemTime(new Date('2026-10-31T18:00:00Z'))
     const reflection = render(<MemoryRouter><App /></MemoryRouter>)
     expect(screen.getByText(/Day 31 is for catching up/)).toBeInTheDocument()
+    expect(screen.getByTitle('Spotify worship playlist · Day 31')).toBeInTheDocument()
     expect(screen.queryByText(/Proverbs 31/)).not.toBeInTheDocument()
     reflection.unmount()
 

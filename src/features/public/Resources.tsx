@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { PlaylistPlayer } from './PlaylistPlayer'
+import { useChurchDay } from './useChurchDay'
 import { UpdatesSignupForm } from './UpdatesSignup'
 
 const courseUrl = 'https://altar.day/CPC'
@@ -6,6 +9,9 @@ const eyebrowClass = 'text-xs font-semibold uppercase tracking-[0.22em] text-alt
 const sectionClass = 'grid gap-6 border-t border-altar-stone py-12 md:grid-cols-[9rem_1fr] md:gap-10 md:py-16'
 
 export function Resources() {
+  const churchDay = useChurchDay()
+  const [chosenDay, setChosenDay] = useState<number | null>(null)
+  const playlistDay = chosenDay ?? churchDay.dayOfMonth
   return (
     <main className="bg-altar-parchment text-altar-ink">
       <header className="bg-altar-teal px-6 py-16 text-altar-parchment sm:px-10 sm:py-20 lg:px-16">
@@ -43,11 +49,14 @@ export function Resources() {
             <p className={eyebrowClass}>Sing Your Prayers</p>
             <h2 className="mt-3 font-serif text-3xl sm:text-4xl" id="playlists-heading">Worship Playlists</h2>
             <p className="mt-5 max-w-2xl leading-8">Let worship accompany your morning, noon, and evening prayer. Day-specific playlists combine sung prayer, Scripture, worship, and instrumental space to help turn your attention to Jesus throughout the day.</p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <button className="button-primary cursor-not-allowed opacity-60" disabled type="button">Spotify Playlist</button>
-              <button className="button-primary cursor-not-allowed opacity-60" disabled type="button">Apple Music Playlist</button>
+            <div className="mt-7">
+              <label className="block text-sm font-semibold text-altar-teal" htmlFor="playlist-day">Choose a day of the month</label>
+              <select className="focus-ring mt-2 w-full rounded-sm border border-altar-stone bg-white px-4 py-3 sm:w-56" id="playlist-day" value={playlistDay} onChange={(event) => setChosenDay(Number(event.target.value))}>
+                {Array.from({ length: 31 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>Day {day}{day === churchDay.dayOfMonth ? ' · Today' : ''}</option>)}
+              </select>
+              <p className="mt-3 text-sm text-altar-ink/70">A playlist for every day. Begin again with day 1 each month.</p>
+              <PlaylistPlayer day={playlistDay} />
             </div>
-            <p className="mt-3 text-sm text-altar-ink/70">Playlist links are coming soon.</p>
           </div>
         </section>
 

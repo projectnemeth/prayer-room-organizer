@@ -1,5 +1,8 @@
 # Resources page: team feedback implementation
 
+**Playlist update (2026-09-30):** Resources now offers a selector for calendar days 1–31, defaulting to today in Denver, with the supplied daily Spotify destination and compact color player beneath the platform buttons. Playlists repeat monthly. Apple Music remains disabled pending its missing URLs and embed codes. This supersedes the collection-link decision and playlist placeholder requirements below.
+
+
 **Source:** Team's “Resources Page” feedback supplied September 29, 2026. Its final “Explanation Behind Sections” is planning context and does not appear on the page.
 
 ## Approach

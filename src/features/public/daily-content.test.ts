@@ -1,12 +1,25 @@
-import { getDailyScriptureAssignment, isPlaylistDate, monthlyScriptureSchedule } from './daily-content'
+import { getDailyPlaylist, getPlaylistForDay, getDailyScriptureAssignment, monthlyScriptureSchedule } from './daily-content'
 
-describe('the 30-day initiative playlist', () => {
-  it('runs only from October 1 through October 30, 2026', () => {
-    expect(isPlaylistDate('2026-09-30')).toBe(false)
-    expect(isPlaylistDate('2026-10-01')).toBe(true)
-    expect(isPlaylistDate('2026-10-30')).toBe(true)
-    expect(isPlaylistDate('2026-10-31')).toBe(false)
-    expect(isPlaylistDate('2026-11-01')).toBe(false)
+describe('the monthly daily playlists', () => {
+  it('has a matching Spotify destination and compact color embed for all 31 days', () => {
+    const ids = new Set<string>()
+    for (let day = 1; day <= 31; day++) {
+      const playlist = getPlaylistForDay(day)
+      const url = new URL(playlist.spotify!)
+      const embed = new URL(playlist.spotifyEmbed!)
+      ids.add(url.pathname)
+      expect(embed.pathname).toBe(`/embed${url.pathname}`)
+      expect(embed.searchParams.has('theme')).toBe(false)
+      expect(playlist.appleMusic).toBeUndefined()
+    }
+    expect(ids.size).toBe(31)
+  })
+
+  it('repeats every month, including day 31, and rejects invalid days', () => {
+    expect(getDailyPlaylist('2026-09-30')).toEqual(getDailyPlaylist('2026-10-30'))
+    expect(getDailyPlaylist('2026-10-31').spotify).toContain('67TTVa7b9jlmhDrvFSV1KH')
+    expect(getDailyPlaylist('2026-11-01').spotify).toBeDefined()
+    for (const day of [0, 32, 1.5, NaN]) expect(getPlaylistForDay(day).spotify).toBeUndefined()
   })
 })
 

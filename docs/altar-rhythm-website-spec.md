@@ -1,5 +1,8 @@
 # ALTAR Rhythm website: review, specification, and implementation plan
 
+**Playlist update (2026-09-30):** The user supplied Spotify destinations and compact color (152px) embeds for days 1–31 and requested one playlist for every calendar day of the month. This supersedes the October-only, 30-playlist rules below; the October initiative itself still ends October 30. Home now follows the Denver-local day every month, including the 31st. Resources offers a day selector. Apple Music URLs and embeds were absent from the supplied export and remain pending. The Psalm reading schedule is unchanged.
+
+
 **Status:** Draft for content and integration decisions
 
 **Reviewed:** 2026-09-28
