@@ -47,7 +47,7 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Spotify' })).toHaveAttribute('href', expect.stringContaining('https://open.spotify.com/playlist/'))
     expect(screen.getByRole('button', { name: 'Apple Music' })).toBeDisabled()
     expect(screen.getByRole('link', { name: 'THE ALTAR RHYTHM' })).toHaveAttribute('href', '/')
-    expect(screen.getByRole('link', { name: 'Gathering times and locations' })).toHaveAttribute('href', '/initiatives')
+    expect(screen.getByRole('link', { name: 'Gathering times and locations' })).toHaveAttribute('href', '/calendar')
     expect(screen.getByRole('link', { name: 'Explore the prayer focuses →' })).toHaveAttribute('href', '/rhythm#weekly-focus')
     expect(screen.getByRole('link', { name: 'Explore the prayers' })).toHaveAttribute('href', '/rhythm#praying-the-scriptures')
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')

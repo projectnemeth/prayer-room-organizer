@@ -1,85 +1,24 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getSupabaseBrowserClient } from '../../lib/supabase'
 import { getPrayerFocusForDayOfWeek } from './mock-data'
 import { getDailyScriptureAssignment, getGatheringSeason } from './daily-content'
 import { PlaylistPlayer } from './PlaylistPlayer'
 import { UpdatesSignupForm } from './UpdatesSignup'
 import { formatChurchDayHeading } from './church-date'
 import { useChurchDay } from './useChurchDay'
-import type { PrayerFocus, PublicGathering } from './types'
+import type { PrayerFocus } from './types'
 
 interface PublicHomeProps {
   focus?: PrayerFocus
-  gatherings?: PublicGathering[]
-}
-
-interface PublicEventRow {
-  id: string
-  title: string
-  description: string | null
-  location_label: string | null
-  participation_format: 'in_person' | 'online' | 'hybrid' | 'personal'
-  public_url: string | null
-  starts_at: string
-  ends_at: string
-}
-
-function mapGathering(row: PublicEventRow): PublicGathering {
-  const title = row.title.toLowerCase()
-  return {
-    id: row.id,
-    title: row.title,
-    description: row.description ?? '',
-    locationLabel: row.location_label ?? 'Location to be announced',
-    locationType: row.participation_format === 'personal' ? 'in_person' : row.participation_format,
-    meetingUrl: row.public_url ?? undefined,
-    startsAt: row.starts_at,
-    endsAt: row.ends_at,
-    kind: title.includes('morning') ? 'morning' : title.includes('evening') ? 'evening' : 'special',
-  }
-}
-
-function formatGathering(gathering: PublicGathering) {
-  const date = new Date(gathering.startsAt)
-  const day = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', weekday: 'short', month: 'short', day: 'numeric' }).format(date)
-  const time = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(date)
-  return `${day} · ${gathering.timeLabel ?? time}`
 }
 
 /** Visitor-safe landing page. Daily teaching comes from the shared Denver-local weekly schedule. */
-export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGatherings }: PublicHomeProps) {
+export function PublicHome({ focus: suppliedFocus }: PublicHomeProps) {
   const churchDay = useChurchDay()
   const focus = suppliedFocus ?? getPrayerFocusForDayOfWeek(churchDay.dayOfWeek)
-  const [gatherings, setGatherings] = useState<PublicGathering[]>(suppliedGatherings ?? [])
-  const [loadError, setLoadError] = useState(false)
   const octoberVisible = churchDay.dateKey <= '2026-10-30'
   const octoberUpcoming = churchDay.dateKey < '2026-10-01'
   const gatheringSeason = getGatheringSeason(churchDay.dateKey)
   const scripture = getDailyScriptureAssignment(churchDay.dayOfMonth)
-
-  useEffect(() => {
-    if (suppliedGatherings) return
-    let active = true
-
-    const load = async () => {
-      try {
-        const { data, error } = await getSupabaseBrowserClient()
-          .from('public_events')
-          .select('id, title, description, location_label, participation_format, public_url, starts_at, ends_at')
-          .gte('ends_at', new Date().toISOString())
-          .order('starts_at', { ascending: true })
-          .limit(3)
-        if (error) throw error
-        if (active) setGatherings(((data ?? []) as PublicEventRow[]).map(mapGathering))
-      } catch {
-        if (active) setLoadError(true)
-      }
-    }
-
-    void load()
-    return () => { active = false }
-  }, [suppliedGatherings])
 
   return (
     <main className="bg-altar-parchment text-altar-ink">
@@ -100,7 +39,7 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
             {gatheringSeason && (
               <div className="flex min-w-0 flex-col items-start gap-2 min-[600px]:justify-self-end">
                 <a className="button-primary" href={gatheringSeason.liveZoom} rel="noopener noreferrer" target="_blank">Join Live on Zoom</a>
-                <p className="text-sm leading-6 text-altar-ink/75">Mon–Fri · 6:30–7:30 AM &amp; 5–6 PM MT</p>
+                <p className="text-sm leading-6 text-altar-ink/75">Mon-Fri • 6.30-7.30 AM &amp; 5.00-6.00 PM MT</p>
               </div>
             )}
           </div>
@@ -109,7 +48,8 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
             <p className="mt-2 max-w-3xl leading-7">
               {gatheringSeason.invitation}{' '}
               <a className="focus-ring font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" href={gatheringSeason.mapsUrl} rel="noopener noreferrer" target="_blank">{gatheringSeason.locationLabel}</a>
-              {' '}in {gatheringSeason.locationCity}, or online via Zoom.
+              {' '}in {gatheringSeason.locationCity}, or{' '}
+              <a className="focus-ring font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" href={gatheringSeason.liveZoom} rel="noopener noreferrer" target="_blank">online via Zoom</a>.
             </p>
           )}
 
@@ -124,7 +64,7 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
             <article className="bg-white/55 p-5 sm:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Pray with the words of Scripture</p>
               <h3 className="mt-3 font-serif text-2xl">Today&apos;s Prayers</h3>
-              <p className="mt-4 leading-7">Begin each time of prayer with the Lord&apos;s Prayer, then pray with the words of Scripture—morning, noon, and evening.</p>
+              <p className="mt-4 leading-7">Begin each time of prayer with the <strong>Lord&apos;s Prayer (Matt 6:9–13)</strong>, then pray with the words of Scripture-morning, noon, and evening.</p>
               {scripture ? (
                 <ul className="mt-5 space-y-2 leading-7">
                   <li><span aria-hidden="true">🌅</span> <strong>Morning:</strong> {scripture.morning}</li>
@@ -157,19 +97,7 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
               <p className="mt-4 max-w-3xl leading-7">Practice the daily rhythm with us, and make room for at least one gathering each week—in person or online.</p>
             </>
           ) : <p className="mt-5 max-w-3xl leading-7">Continue the rhythm with others at currently published prayer gatherings.</p>}
-          {gatherings.length > 0 && (
-            <ul className="mt-7 divide-y divide-altar-sage/25 border-y border-altar-sage/25">
-              {gatherings.map((gathering) => (
-                <li className="grid gap-2 py-4 md:grid-cols-[11rem_1fr_auto] md:items-center" key={gathering.id}>
-                  <p className="text-sm font-semibold text-altar-teal">{formatGathering(gathering)}</p>
-                  <div><h3 className="font-serif text-xl">{gathering.title}</h3><p className="text-sm text-altar-ink/75">{gathering.locationLabel}</p></div>
-                  <p className="text-sm text-altar-ink/75">{gathering.locationType === 'hybrid' ? 'In person + online' : gathering.locationType === 'online' ? 'Online' : 'In person'}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-          {loadError && <p className="mt-5 text-sm text-altar-ink/70" role="alert">Gatherings could not be refreshed just now. Please try again shortly.</p>}
-          <Link className="button-primary mt-7" to="/initiatives">Gathering times and locations</Link>
+          <Link className="button-primary mt-7" to="/calendar">Gathering times and locations</Link>
         </div>
       </section>
 

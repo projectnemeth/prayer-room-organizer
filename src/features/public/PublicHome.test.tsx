@@ -4,7 +4,7 @@ import { vi } from 'vitest'
 import { PublicHome } from './PublicHome'
 
 function renderHome() {
-  return render(<MemoryRouter><PublicHome gatherings={[]} /></MemoryRouter>)
+  return render(<MemoryRouter><PublicHome /></MemoryRouter>)
 }
 
 afterEach(() => {
@@ -26,7 +26,7 @@ describe('homepage seasonal and evergreen resources', () => {
     act(() => { vi.advanceTimersByTime(30_000) })
     expect(screen.getByRole('heading', { name: 'Sun, Nov 1st' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Join Live on Zoom' })).not.toBeInTheDocument()
-    expect(screen.queryByText(/Mon–Fri ·/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Mon-Fri •/)).not.toBeInTheDocument()
     expect(screen.queryByText(/October 1–30, Monday–Friday/)).not.toBeInTheDocument()
     expect(screen.getByText('Sanctuary Sunday:')).toBeInTheDocument()
     expect(screen.getByText('Psalms 1–2')).toBeInTheDocument()
