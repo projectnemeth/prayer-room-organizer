@@ -7,6 +7,8 @@ export const weeklyPrayerFocusSchedule: DayOfWeekFocus[] = [
     dayName: "Monday",
     shortDay: "MON",
     focusTitle: "Marketplace",
+    category: "Marketplace",
+    dailyTitle: "Marketplace Monday",
     summary:
       "Pray for believers in business, trades, education, healthcare, civic leadership, and every workplace—that integrity, excellence, and the fragrance of Christ would transform our city’s marketplace.",
     scriptureReference: "Colossians 3:23-24",
@@ -19,13 +21,15 @@ export const weeklyPrayerFocusSchedule: DayOfWeekFocus[] = [
     dayOfWeek: 2,
     dayName: "Tuesday",
     shortDay: "TUE",
-    focusTitle: "Ministries",
+    focusTitle: "Revival Tuesday",
+    category: "Revival",
+    dailyTitle: "Revival Tuesday",
     summary:
-      "Pray for local churches, outreach ministries, pastors, and leaders serving the vulnerable across our region—for supernatural endurance, unity, and fresh spiritual power.",
+      "Pray for revival in our churches and region—for repentance, renewed love for Jesus, unity, and the power of the Holy Spirit to awaken hearts and draw people to Him.",
     scriptureReference: "2 Thessalonians 1:11-12",
     scriptureText:
       "To this end we always pray for you, that our God may make you worthy of his calling and may fulfill every resolve for good and every work of faith by his power.",
-    resourceLabel: "Pray for church ministries",
+    resourceLabel: "Pray for revival",
     resourceUrl: "#ministries",
   },
   {
@@ -33,6 +37,8 @@ export const weeklyPrayerFocusSchedule: DayOfWeekFocus[] = [
     dayName: "Wednesday",
     shortDay: "WED",
     focusTitle: "Awakening (Next Gen)",
+    category: "Next Gen",
+    dailyTitle: "Awakening Wednesday",
     summary:
       "Intercede for children, youth, college students, and emerging generations—for an awakening to the holiness and love of Jesus, spiritual protection, and bold faith.",
     scriptureReference: "Psalm 78:6-7",
@@ -46,6 +52,8 @@ export const weeklyPrayerFocusSchedule: DayOfWeekFocus[] = [
     dayName: "Thursday",
     shortDay: "THU",
     focusTitle: "Family",
+    category: "Family",
+    dailyTitle: "Family Thursday",
     summary:
       "Lift up families, marriages, single parents, children, and households. Pray for healing, reconciliation, deep generational faith, and homes filled with the peace of Christ.",
     scriptureReference: "Joshua 24:15",
@@ -59,6 +67,8 @@ export const weeklyPrayerFocusSchedule: DayOfWeekFocus[] = [
     dayName: "Friday",
     shortDay: "FRI",
     focusTitle: "Fullness (Israel & the Nations)",
+    category: "Israel & Nations",
+    dailyTitle: "Fullness Friday",
     summary:
       "Pray for the peace of Jerusalem, the salvation of Israel, unreached people groups, and missionaries around the globe—that all nations would behold His glory.",
     scriptureReference: "Isaiah 62:6-7",
@@ -72,6 +82,8 @@ export const weeklyPrayerFocusSchedule: DayOfWeekFocus[] = [
     dayName: "Saturday",
     shortDay: "SAT",
     focusTitle: "Sabbath (delighting in God as Creator, Sustainer, and Coming King)",
+    category: "Sabbath",
+    dailyTitle: "Sabbath Saturday",
     summary:
       "Enter into rest and adoration, delighting in God as Creator, Sustainer, and Coming King. Set aside striving and recalibrate in His abiding presence and sovereign goodness.",
     scriptureReference: "Psalm 103:1-2",
@@ -85,6 +97,8 @@ export const weeklyPrayerFocusSchedule: DayOfWeekFocus[] = [
     dayName: "Sunday",
     shortDay: "SUN",
     focusTitle: "Sanctuary (blessing the Gathered Church)",
+    category: "The Gathered Church",
+    dailyTitle: "Sanctuary Sunday",
     summary:
       "Bless the gathered Church on the Lord’s Day. Pray for pastors, teachers, worshipers, and seekers assembling in sanctuaries across our region—for conviction, joy, and the manifest presence of God.",
     scriptureReference: "Psalm 134:1-2",
@@ -100,6 +114,8 @@ export function getPrayerFocusForDayOfWeek(dayOfWeek: number): PrayerFocus {
   const match = weeklyPrayerFocusSchedule.find((item) => item.dayOfWeek === normalizedDay);
   if (!match) {
     return {
+      category: weeklyPrayerFocusSchedule[0].category,
+      dailyTitle: weeklyPrayerFocusSchedule[0].dailyTitle,
       title: weeklyPrayerFocusSchedule[0].focusTitle,
       summary: weeklyPrayerFocusSchedule[0].summary,
       scriptureReference: weeklyPrayerFocusSchedule[0].scriptureReference,
@@ -109,6 +125,8 @@ export function getPrayerFocusForDayOfWeek(dayOfWeek: number): PrayerFocus {
     };
   }
   return {
+    category: match.category,
+    dailyTitle: match.dailyTitle,
     title: match.focusTitle,
     summary: match.summary,
     scriptureReference: match.scriptureReference,

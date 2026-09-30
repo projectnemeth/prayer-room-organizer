@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getSupabaseBrowserClient } from '../../lib/supabase'
 import { getPrayerFocusForDayOfWeek } from './mock-data'
-import { getDailyScriptureAssignment, participationLinks } from './daily-content'
+import { getDailyScriptureAssignment, getGatheringSeason } from './daily-content'
 import { PlaylistPlayer } from './PlaylistPlayer'
 import { UpdatesSignupForm } from './UpdatesSignup'
+import { formatChurchDayHeading } from './church-date'
 import { useChurchDay } from './useChurchDay'
 import type { PrayerFocus, PublicGathering } from './types'
 
@@ -54,6 +55,7 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
   const [loadError, setLoadError] = useState(false)
   const octoberVisible = churchDay.dateKey <= '2026-10-30'
   const octoberUpcoming = churchDay.dateKey < '2026-10-01'
+  const gatheringSeason = getGatheringSeason(churchDay.dateKey)
   const scripture = getDailyScriptureAssignment(churchDay.dayOfMonth)
 
   useEffect(() => {
@@ -81,50 +83,35 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
 
   return (
     <main className="bg-altar-parchment text-altar-ink">
-      <section className="bg-altar-teal px-6 py-20 text-altar-parchment sm:px-10 lg:px-16">
+      <section className="bg-altar-teal px-6 py-9 text-altar-parchment sm:px-10 sm:py-12 lg:px-16">
         <div className="mx-auto max-w-5xl">
           <h1 className="max-w-3xl font-serif text-5xl leading-[1.05] sm:text-6xl">The ALTAR Rhythm</h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-altar-parchment/90">An ancient daily rhythm of morning, noon, and evening prayer—turning our attention to Jesus through Scripture, worship, and prayer.</p>
-          <p className="mt-3 max-w-2xl leading-7 text-altar-parchment/85">Three moments each day to pause, attend to God, and pray with His Word—in our homes, at work, and together.</p>
-          <a className="focus-ring mt-9 inline-flex rounded-sm bg-altar-parchment px-5 py-3 text-sm font-semibold text-altar-ink hover:bg-white" href="#carry-the-rhythm">Join the rhythm</a>
+          <p className="mt-4 max-w-2xl text-lg leading-7 text-altar-parchment/90">An ancient daily rhythm of morning, noon, and evening prayer—turning our attention to Jesus through Scripture, worship, and prayer together wherever we are.</p>
         </div>
       </section>
 
-      <section aria-labelledby="pray-today-heading" className="px-6 py-16 sm:px-10 lg:px-16">
+      <section aria-labelledby="pray-today-heading" className="px-6 py-8 sm:px-10 sm:py-10 lg:px-16">
         <div className="mx-auto max-w-5xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-sage">A shared invitation</p>
-          <h2 className="mt-3 font-serif text-3xl sm:text-4xl" id="pray-today-heading">Pray with us today</h2>
-          <p className="mt-5 max-w-3xl leading-7">Even when you can&apos;t gather in person or online, you can share in the rhythm by pausing to pray wherever you are—for a few minutes or the full hour. If these hours don&apos;t fit your day, choose your own three moments.</p>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {[
-              ['Morning', '6:30–7:30 AM'],
-              ['Noon', '12–1 PM'],
-              ['Evening', '5–6 PM'],
-            ].map(([moment, time]) => (
-              <div className="border-t-2 border-altar-gold bg-white/45 p-6" key={moment}>
-                <h3 className="font-serif text-2xl">{moment}</h3>
-                <p className="mt-2 text-altar-teal">{time} Mountain Time</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-7 flex flex-wrap items-center gap-3">
-            {participationLinks.liveZoom ? (
-              <a className="button-primary" href={participationLinks.liveZoom} rel="noopener noreferrer" target="_blank">Join live on Zoom</a>
-            ) : (
-              <button className="button-primary cursor-not-allowed opacity-60" disabled type="button">Join live on Zoom</button>
-            )}
-            {!participationLinks.liveZoom && <span className="text-sm text-altar-ink/65">Live link coming soon</span>}
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-sage">Pray with us today</p>
+          <h2 className="mt-2 font-serif text-3xl leading-tight sm:text-4xl" id="pray-today-heading">{formatChurchDayHeading(churchDay.dateKey)}</h2>
+          {gatheringSeason && (
+            <div className="mt-4 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+              <a className="button-primary" href={gatheringSeason.liveZoom} rel="noopener noreferrer" target="_blank">Join Live on Zoom</a>
+              <p className="text-sm leading-6 text-altar-ink/75">Mon–Fri · 6:30–7:30 AM &amp; 5–6 PM MT</p>
+            </div>
+          )}
+          <p className="mt-4 max-w-3xl leading-7">Wherever you are, pray with us during our shared hours: <strong>6:30–7:30 AM, 12–1 PM, and 5–6 PM Mountain Time</strong>—for a few minutes or the full hour.</p>
+          {gatheringSeason && <p className="mt-2 max-w-3xl leading-7">{gatheringSeason.invitation}</p>}
 
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
-            <article className="bg-altar-stone/45 p-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Today&apos;s prayer focus</p>
-              <h3 className="mt-3 font-serif text-2xl">{focus.title}</h3>
-              <p className="mt-4 leading-7">{focus.summary}</p>
+          <div className="mt-6 grid items-start gap-4 md:grid-cols-2">
+            <article className="bg-altar-stone/45 p-5 sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">{focus.category ?? focus.title}</p>
+              <h3 className="mt-3 font-serif text-2xl">Today&apos;s Focus</h3>
+              <p className="mt-4 leading-7"><strong>{focus.dailyTitle ?? focus.title}:</strong> {focus.summary}</p>
               <p className="mt-4 text-sm font-semibold text-altar-sage">{focus.scriptureReference}</p>
-              <Link className="focus-ring mt-5 inline-block font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" to="/rhythm#weekly-focus">Explore the prayer focuses</Link>
+              <Link className="focus-ring mt-5 inline-block font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" to="/rhythm#weekly-focus">Explore the prayer focuses →</Link>
             </article>
-            <article className="bg-white/55 p-7">
+            <article className="bg-white/55 p-5 sm:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Today&apos;s prayers</p>
               <h3 className="mt-3 font-serif text-2xl">Pray with the words of Scripture</h3>
               <p className="mt-4 leading-7">Begin each time of prayer with the Lord&apos;s Prayer, then pray with the words of Scripture—morning, noon, and evening.</p>
@@ -139,11 +126,11 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
               )}
               <Link className="focus-ring mt-5 inline-block font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" to="/rhythm#praying-the-scriptures">Explore the prayers</Link>
             </article>
-            <article className="border-t-2 border-altar-gold bg-white/55 p-7 md:col-span-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Today&apos;s playlist</p>
-              <h3 className="mt-3 font-serif text-2xl">Worship throughout the day</h3>
-              <p className="mt-4 leading-7">Worship and instrumental to accompany morning, noon, and evening prayer.</p>
-              <PlaylistPlayer day={churchDay.dayOfMonth} />
+            <article className="border-t-2 border-altar-gold bg-white/55 p-5 sm:p-6 md:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Thank &amp; Praise</p>
+              <h3 className="mt-3 font-serif text-2xl">Today&apos;s Worship</h3>
+              <p className="mt-4 leading-7">Worship and instrumental music to accompany morning, noon, and evening prayer.</p>
+              <PlaylistPlayer day={churchDay.dayOfMonth} compact />
             </article>
           </div>
         </div>

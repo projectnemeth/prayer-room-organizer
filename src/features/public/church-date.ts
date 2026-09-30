@@ -22,3 +22,15 @@ export function getChurchDay(date = new Date()) {
     dayOfWeek: weekday ?? 0,
   }
 }
+
+/** Format the same Denver-local day used by every daily resource. */
+export function formatChurchDayHeading(dateKey: string) {
+  const date = new Date(`${dateKey}T12:00:00Z`)
+  const day = Number(dateKey.slice(-2))
+  const suffix = day % 100 >= 11 && day % 100 <= 13
+    ? 'th'
+    : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[day % 10] ?? 'th'
+  const weekday = new Intl.DateTimeFormat('en-US', { timeZone: churchTimeZone, weekday: 'short' }).format(date)
+  const month = new Intl.DateTimeFormat('en-US', { timeZone: churchTimeZone, month: 'short' }).format(date)
+  return `${weekday}, ${month} ${day}${suffix}`
+}

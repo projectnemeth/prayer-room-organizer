@@ -7,8 +7,20 @@ export interface PlaylistLinks {
   appleMusicEmbed?: string
 }
 
-/** Add the public meeting URL when it is ready to share. */
-export const participationLinks: { liveZoom?: string } = {}
+/** Seasonal gathering access is separate from the evergreen monthly resources.
+ * Add a confirmed spring season here when its dates and meeting URL are ready.
+ * Ends are exclusive Denver-local dates; the October Zoom link expires November 1.
+ */
+const gatheringSeasons = [{
+  announceFrom: '2026-09-30',
+  endsBefore: '2026-11-01',
+  liveZoom: 'https://altar.day/zoom-Oct26',
+  invitation: 'October 1–30, Monday–Friday, join our morning and evening gatherings in person at the Lighthouse Prayer Room in Castle Rock, CO, or online via Zoom.',
+}]
+
+export function getGatheringSeason(dateKey: string) {
+  return gatheringSeasons.find((season) => dateKey >= season.announceFrom && dateKey < season.endsBefore)
+}
 
 const playlistLinksByDay: Partial<Record<number, PlaylistLinks>> = playlistLinks
 

@@ -17,6 +17,8 @@ export interface PublicGathering {
 }
 
 export interface PrayerFocus {
+  category?: string;
+  dailyTitle?: string;
   title: string;
   summary: string;
   scriptureReference: string;
@@ -30,6 +32,8 @@ export interface DayOfWeekFocus {
   dayName: string;
   shortDay: string;
   focusTitle: string;
+  category: string;
+  dailyTitle: string;
   summary: string;
   scriptureReference: string;
   scriptureText: string;

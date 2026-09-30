@@ -25,7 +25,7 @@ vi.mock('../features/access', async (importOriginal) => {
 describe('App', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(new Date('2026-09-28T18:00:00Z'))
+    vi.setSystemTime(new Date('2026-09-30T18:00:00Z'))
   })
 
   afterEach(() => {
@@ -41,14 +41,14 @@ describe('App', () => {
     )
 
     expect(screen.getByRole('heading', { name: 'The ALTAR Rhythm' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Join the rhythm' })).toHaveAttribute('href', '#carry-the-rhythm')
+    expect(screen.queryByRole('link', { name: 'Join the rhythm' })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Stay in the Rhythm' })).toHaveAttribute('id', 'carry-the-rhythm')
-    expect(screen.getByRole('button', { name: 'Join live on Zoom' })).toBeDisabled()
-    expect(screen.getByRole('link', { name: 'Spotify playlist' })).toHaveAttribute('href', expect.stringContaining('https://open.spotify.com/playlist/'))
-    expect(screen.getByRole('button', { name: 'Apple Music playlist' })).toBeDisabled()
+    expect(screen.getByRole('link', { name: 'Join Live on Zoom' })).toHaveAttribute('href', 'https://altar.day/zoom-Oct26')
+    expect(screen.getByRole('link', { name: 'Spotify' })).toHaveAttribute('href', expect.stringContaining('https://open.spotify.com/playlist/'))
+    expect(screen.getByRole('button', { name: 'Apple Music' })).toBeDisabled()
     expect(screen.getByRole('link', { name: 'THE ALTAR RHYTHM' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Gathering times and locations' })).toHaveAttribute('href', '/initiatives')
-    expect(screen.getByRole('link', { name: 'Explore the prayer focuses' })).toHaveAttribute('href', '/rhythm#weekly-focus')
+    expect(screen.getByRole('link', { name: 'Explore the prayer focuses →' })).toHaveAttribute('href', '/rhythm#weekly-focus')
     expect(screen.getByRole('link', { name: 'Explore the prayers' })).toHaveAttribute('href', '/rhythm#praying-the-scriptures')
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Initiatives' })).toHaveAttribute('href', '/initiatives')

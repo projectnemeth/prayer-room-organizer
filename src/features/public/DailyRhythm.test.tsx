@@ -37,8 +37,8 @@ describe('DailyRhythm', () => {
   it('correctly maps each day of the week to the requested focus theme', () => {
     // 1: Monday -> Marketplace
     expect(getPrayerFocusForDayOfWeek(1).title).toBe('Marketplace');
-    // 2: Tuesday -> Ministries
-    expect(getPrayerFocusForDayOfWeek(2).title).toBe('Ministries');
+    // 2: Tuesday -> Revival
+    expect(getPrayerFocusForDayOfWeek(2).title).toBe('Revival Tuesday');
     // 3: Wednesday -> Awakening (Next Gen)
     expect(getPrayerFocusForDayOfWeek(3).title).toBe('Awakening (Next Gen)');
     // 4: Thursday -> Family
