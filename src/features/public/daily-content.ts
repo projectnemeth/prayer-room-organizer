@@ -15,7 +15,10 @@ const gatheringSeasons = [{
   announceFrom: '2026-09-30',
   endsBefore: '2026-11-01',
   liveZoom: 'https://altar.day/zoom-Oct26',
-  invitation: 'October 1–30, Monday–Friday, join our morning and evening gatherings in person at the Lighthouse Prayer Room in Castle Rock, CO, or online via Zoom.',
+  invitation: 'October 1–30, Monday–Friday, join our morning and evening gatherings in person at the',
+  locationLabel: 'Lighthouse Prayer Room',
+  locationCity: 'Castle Rock, CO',
+  mapsUrl: 'https://www.google.com/maps/search/?api=1&query=4881%20Cherokee%20Dr%2C%20Castle%20Rock%2C%20CO%2080109',
 }]
 
 export function getGatheringSeason(dateKey: string) {

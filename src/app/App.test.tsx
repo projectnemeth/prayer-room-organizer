@@ -59,7 +59,7 @@ describe('App', () => {
   it('shows matching daily readings and uses the 31st for reflection', () => {
     vi.setSystemTime(new Date('2026-10-05T18:00:00Z'))
     const { unmount } = render(<MemoryRouter><App /></MemoryRouter>)
-    const prayers = within(screen.getByRole('heading', { name: 'Pray with the words of Scripture' }).closest('article')!)
+    const prayers = within(screen.getByRole('heading', { name: "Today's Prayers" }).closest('article')!)
     expect(prayers.getByText('Psalms 21–22')).toBeInTheDocument()
     expect(prayers.getByText('Psalm 23 · Proverbs 5')).toBeInTheDocument()
     expect(prayers.getByText('Psalms 24–25')).toBeInTheDocument()

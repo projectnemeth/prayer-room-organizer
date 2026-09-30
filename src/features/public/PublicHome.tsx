@@ -92,16 +92,26 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
 
       <section aria-labelledby="pray-today-heading" className="px-6 py-8 sm:px-10 sm:py-10 lg:px-16">
         <div className="mx-auto max-w-5xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-sage">Pray with us today</p>
-          <h2 className="mt-2 font-serif text-3xl leading-tight sm:text-4xl" id="pray-today-heading">{formatChurchDayHeading(churchDay.dateKey)}</h2>
-          {gatheringSeason && (
-            <div className="mt-4 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-              <a className="button-primary" href={gatheringSeason.liveZoom} rel="noopener noreferrer" target="_blank">Join Live on Zoom</a>
-              <p className="text-sm leading-6 text-altar-ink/75">Mon–Fri · 6:30–7:30 AM &amp; 5–6 PM MT</p>
+          <div className={`grid items-center gap-4 ${gatheringSeason ? 'min-[600px]:grid-cols-[minmax(0,1fr)_minmax(0,18rem)]' : ''}`}>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-sage">Pray with us today</p>
+              <h2 className="mt-2 font-serif text-3xl leading-tight sm:text-4xl" id="pray-today-heading">{formatChurchDayHeading(churchDay.dateKey)}</h2>
             </div>
-          )}
+            {gatheringSeason && (
+              <div className="flex min-w-0 flex-col items-start gap-2 min-[600px]:justify-self-end">
+                <a className="button-primary" href={gatheringSeason.liveZoom} rel="noopener noreferrer" target="_blank">Join Live on Zoom</a>
+                <p className="text-sm leading-6 text-altar-ink/75">Mon–Fri · 6:30–7:30 AM &amp; 5–6 PM MT</p>
+              </div>
+            )}
+          </div>
           <p className="mt-4 max-w-3xl leading-7">Wherever you are, pray with us during our shared hours: <strong>6:30–7:30 AM, 12–1 PM, and 5–6 PM Mountain Time</strong>—for a few minutes or the full hour.</p>
-          {gatheringSeason && <p className="mt-2 max-w-3xl leading-7">{gatheringSeason.invitation}</p>}
+          {gatheringSeason && (
+            <p className="mt-2 max-w-3xl leading-7">
+              {gatheringSeason.invitation}{' '}
+              <a className="focus-ring font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" href={gatheringSeason.mapsUrl} rel="noopener noreferrer" target="_blank">{gatheringSeason.locationLabel}</a>
+              {' '}in {gatheringSeason.locationCity}, or online via Zoom.
+            </p>
+          )}
 
           <div className="mt-6 grid items-start gap-4 md:grid-cols-2">
             <article className="bg-altar-stone/45 p-5 sm:p-6">
@@ -112,8 +122,8 @@ export function PublicHome({ focus: suppliedFocus, gatherings: suppliedGathering
               <Link className="focus-ring mt-5 inline-block font-semibold text-altar-teal underline decoration-altar-gold decoration-2 underline-offset-4" to="/rhythm#weekly-focus">Explore the prayer focuses →</Link>
             </article>
             <article className="bg-white/55 p-5 sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Today&apos;s prayers</p>
-              <h3 className="mt-3 font-serif text-2xl">Pray with the words of Scripture</h3>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-altar-teal">Pray with the words of Scripture</p>
+              <h3 className="mt-3 font-serif text-2xl">Today&apos;s Prayers</h3>
               <p className="mt-4 leading-7">Begin each time of prayer with the Lord&apos;s Prayer, then pray with the words of Scripture—morning, noon, and evening.</p>
               {scripture ? (
                 <ul className="mt-5 space-y-2 leading-7">
