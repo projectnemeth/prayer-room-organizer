@@ -4,16 +4,17 @@ import { appPath } from '../../app/paths'
 
 interface InvitationSignInProps {
   onRequestMagicLink: (email: string) => Promise<void>
+  initialError?: string
 }
 
 /**
  * A sign-in-only entry point. It never creates a public account or volunteer
  * profile; the supplied action must request a link only for an existing user.
  */
-export function InvitationSignIn({ onRequestMagicLink }: InvitationSignInProps) {
+export function InvitationSignIn({ onRequestMagicLink, initialError }: InvitationSignInProps) {
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>(initialError ? 'error' : 'idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError ?? null)
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -42,7 +43,7 @@ export function InvitationSignIn({ onRequestMagicLink }: InvitationSignInProps) 
         {status === 'sent' ? (
           <div className="mt-7 border-l-2 border-altar-gold bg-altar-parchment/70 p-5" role="status">
             <h2 className="font-display text-xl text-altar-teal">Check your email</h2>
-            <p className="mt-2 text-sm leading-6 text-altar-ink/75">If this address has been invited, a sign-in link is on its way. Open it in this browser to return to the private portal.</p>
+            <p className="mt-2 text-sm leading-6 text-altar-ink/75">If this address has been invited, a sign-in link is on its way. Open only the newest email; each link works once. Return to the private portal in the browser where you open the link.</p>
           </div>
         ) : (
           <form className="mt-7 space-y-5" onSubmit={(event) => void submit(event)}>
