@@ -170,6 +170,7 @@ Deno.serve(async (request) => {
 
   const requestOrigin = request.headers.get("Origin");
   const allowedOrigins = new Set([
+    "https://altarrhythm.com",
     "https://altar.lighthouseprayerroom.org",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
