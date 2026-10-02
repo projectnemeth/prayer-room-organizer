@@ -94,10 +94,13 @@ export function PublicHome({ focus: suppliedFocus }: PublicHomeProps) {
             <>
               <p className="mt-5 max-w-3xl leading-7">ALTAR Initiatives are shared seasons of establishing a lasting rhythm of prayer.</p>
               <p className="mt-4 max-w-3xl leading-7">{octoberUpcoming ? 'Beginning October 1, we will set aside time to seek Jesus together at the Lighthouse Prayer Room and wherever we are.' : 'This October, we are setting aside time to seek Jesus together at the Lighthouse Prayer Room and wherever we are.'}</p>
-              <p className="mt-4 max-w-3xl leading-7">Practice the daily rhythm with us, and make room for at least one gathering each week—in person or online.</p>
+              <p className="mt-4 max-w-3xl leading-7"><strong>Take your place on the wall.</strong><br />Commit to at least one prayer gathering each week throughout October—in person or online.</p>
             </>
           ) : <p className="mt-5 max-w-3xl leading-7">Continue the rhythm with others at currently published prayer gatherings.</p>}
-          <Link className="button-primary mt-7" to="/calendar">Gathering times and locations</Link>
+          <div className="mt-7 flex flex-wrap gap-3">
+            {octoberVisible && <a className="button-primary" href="https://altar.day/watchsignup">Weekly Prayer Signup</a>}
+            <Link className="button-primary" to="/calendar">Gathering times and locations</Link>
+          </div>
         </div>
       </section>
 
