@@ -62,7 +62,7 @@ function approvedLink(value: string | undefined, host: string) {
 export function getPlaylistForDay(day: number): PlaylistLinks {
   const links = Number.isInteger(day) && day >= 1 && day <= 31 ? playlistLinksByDay[day] : undefined
   return {
-    spotify: approvedLink(links?.spotify, 'open.spotify.com'),
+    spotify: approvedLink(links?.spotify, 'altar.day'),
     spotifyEmbed: approvedLink(links?.spotifyEmbed, 'open.spotify.com'),
     appleMusic: approvedLink(links?.appleMusic, 'music.apple.com'),
     appleMusicEmbed: approvedLink(links?.appleMusicEmbed, 'embed.music.apple.com'),

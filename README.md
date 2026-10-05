@@ -28,3 +28,7 @@ React + TypeScript built as static files on the existing shared host; Supabase f
 ## Communications setup
 
 The public signup on Home, Initiatives, Resources, and `/updates` embeds the published Kit form. Kit manages new marketing subscribers; the site does not use a Kit API key. Supabase and Resend still handle volunteer reminders and previously issued update confirmation/unsubscribe links. Existing confirmed Supabase subscribers remain in their separate legacy list. See [communications operations](docs/communications-operations.md) for the provider boundaries and legacy workflow.
+
+## Daily worship playlists
+
+Home and Resources use the versioned day 1–31 registry in `src/features/public/playlist-links.json`, repeating each month according to the Denver-local calendar day. The `spotify` destination comes from the supplied database export's **Short URL (Spotify)** column (trim trailing whitespace in CSV headers). The `spotifyEmbed` player URL comes from **Embed Color-Compact (152px)**. When a new export is supplied, update this registry; the site does not fetch the source database live. Short-link destinations can be maintained through `altar.day` without changing the website buttons.

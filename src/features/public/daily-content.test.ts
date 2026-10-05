@@ -1,14 +1,17 @@
 import { getDailyPlaylist, getPlaylistForDay, getDailyScriptureAssignment, monthlyScriptureSchedule } from './daily-content'
 
 describe('the monthly daily playlists', () => {
-  it('has a matching Spotify destination and compact color embed for all 31 days', () => {
+  it('uses the supplied Spotify short URL and compact color embed for all 31 days', () => {
     const ids = new Set<string>()
     for (let day = 1; day <= 31; day++) {
       const playlist = getPlaylistForDay(day)
-      const url = new URL(playlist.spotify!)
       const embed = new URL(playlist.spotifyEmbed!)
-      ids.add(url.pathname)
-      expect(embed.pathname).toBe(`/embed${url.pathname}`)
+      // Preserve the capital S in day 22 exactly as supplied in the export.
+      const slug = day === 22 ? 'Spotify-day22' : `spotify-day${String(day).padStart(2, '0')}`
+      expect(playlist.spotify).toBe(`https://altar.day/${slug}`)
+      ids.add(embed.pathname)
+      expect(embed.origin).toBe('https://open.spotify.com')
+      expect(embed.pathname).toMatch(/^\/embed\/playlist\/[A-Za-z0-9]+$/)
       expect(embed.searchParams.has('theme')).toBe(false)
       expect(playlist.appleMusic).toBeUndefined()
     }
@@ -17,7 +20,7 @@ describe('the monthly daily playlists', () => {
 
   it('repeats every month, including day 31, and rejects invalid days', () => {
     expect(getDailyPlaylist('2026-09-30')).toEqual(getDailyPlaylist('2026-10-30'))
-    expect(getDailyPlaylist('2026-10-31').spotify).toContain('67TTVa7b9jlmhDrvFSV1KH')
+    expect(getDailyPlaylist('2026-10-31').spotify).toBe('https://altar.day/spotify-day31')
     expect(getDailyPlaylist('2026-11-01').spotify).toBeDefined()
     for (const day of [0, 32, 1.5, NaN]) expect(getPlaylistForDay(day).spotify).toBeUndefined()
   })

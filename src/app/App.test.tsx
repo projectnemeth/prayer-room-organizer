@@ -44,7 +44,7 @@ describe('App', () => {
     expect(screen.queryByRole('link', { name: 'Join the rhythm' })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Stay in the Rhythm' })).toHaveAttribute('id', 'carry-the-rhythm')
     expect(screen.getByRole('link', { name: 'Join Live on Zoom' })).toHaveAttribute('href', 'https://altar.day/zoom-Oct26')
-    expect(screen.getByRole('link', { name: 'Spotify' })).toHaveAttribute('href', expect.stringContaining('https://open.spotify.com/playlist/'))
+    expect(screen.getByRole('link', { name: 'Spotify' })).toHaveAttribute('href', 'https://altar.day/spotify-day30')
     expect(screen.getByRole('button', { name: 'Apple Music' })).toBeDisabled()
     expect(screen.getByRole('link', { name: 'THE ALTAR RHYTHM' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Gathering times and locations' })).toHaveAttribute('href', '/calendar')

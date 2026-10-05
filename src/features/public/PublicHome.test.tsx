@@ -22,6 +22,7 @@ describe('homepage seasonal and evergreen resources', () => {
     expect(screen.getByText(/October 1–30, Monday–Friday/)).toBeInTheDocument()
     expect(screen.getByText(/Day 31 is for catching up/)).toBeInTheDocument()
     expect(screen.getByTitle('Spotify worship playlist · Day 31')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Spotify' })).toHaveAttribute('href', 'https://altar.day/spotify-day31')
 
     act(() => { vi.advanceTimersByTime(30_000) })
     expect(screen.getByRole('heading', { name: 'Sun, Nov 1st' })).toBeInTheDocument()
@@ -33,7 +34,7 @@ describe('homepage seasonal and evergreen resources', () => {
     expect(screen.getByText('Psalm 3 · Proverbs 1')).toBeInTheDocument()
     expect(screen.getByTitle('Spotify worship playlist · Day 1')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Apple Music' })).toBeDisabled()
-    expect(screen.getByRole('link', { name: 'Spotify' })).toHaveAttribute('href', expect.stringContaining('/2NIAAfjxKAdcVhws9Yb4nT'))
+    expect(screen.getByRole('link', { name: 'Spotify' })).toHaveAttribute('href', 'https://altar.day/spotify-day01')
   })
 
   it.each([

@@ -16,7 +16,7 @@ describe('Resources', () => {
 
     expect(screen.getByRole('link', { name: 'Get the Course Now' })).toHaveAttribute('href', 'https://altar.day/CPC')
     expect(screen.getByText('Blog link coming soon.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Spotify playlist' })).toHaveAttribute('href', expect.stringContaining('https://open.spotify.com/playlist/'))
+    expect(screen.getByRole('link', { name: 'Spotify playlist' })).toHaveAttribute('href', expect.stringMatching(/^https:\/\/altar\.day\/[Ss]potify-day\d{2}$/))
     expect(screen.getByRole('button', { name: 'Apple Music playlist' })).toBeDisabled()
     expect(screen.getByText(/local pay and pickup only at The Rock Church/)).toBeInTheDocument()
 
@@ -27,13 +27,14 @@ describe('Resources', () => {
   it('switches the platform destination and compact color player together', () => {
     render(<Resources />)
     fireEvent.change(screen.getByRole('combobox', { name: 'Choose a day of the month' }), { target: { value: '31' } })
-    expect(screen.getByRole('link', { name: 'Spotify playlist' })).toHaveAttribute('href', expect.stringContaining('/67TTVa7b9jlmhDrvFSV1KH'))
+    expect(screen.getByRole('link', { name: 'Spotify playlist' })).toHaveAttribute('href', 'https://altar.day/spotify-day31')
     const player = screen.getByTitle('Spotify worship playlist · Day 31')
     expect(player).toHaveAttribute('height', '152')
     expect(player).toHaveAttribute('src', expect.stringContaining('/embed/playlist/67TTVa7b9jlmhDrvFSV1KH'))
     expect(player.getAttribute('src')).not.toContain('theme=0')
     fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } })
     expect(screen.getByTitle('Spotify worship playlist · Day 1')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Spotify playlist' })).toHaveAttribute('href', 'https://altar.day/spotify-day01')
     expect(screen.queryByTitle('Spotify worship playlist · Day 31')).not.toBeInTheDocument()
   })
 
