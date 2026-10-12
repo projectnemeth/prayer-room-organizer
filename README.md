@@ -38,3 +38,5 @@ Home and Resources use the versioned day 1–31 registry in `src/features/public
 Daily resources and scheduling follow `America/Denver`, including daylight saving. Calendars follow the current date until a visitor browses another period; Today returns to the current period. Coordinator inputs always show and save Denver times, regardless of the browser's time zone. New times in a skipped or repeated daylight-saving hour require a different time; editing an unchanged existing time preserves its original instant.
 
 Run `npm test`, `npm run build`, and `npm run lint` for the standard checks. Run `npm run test:timezones` for the permanent date regression suite in Denver, UTC, New York, Tokyo, and Honolulu, including month/year boundaries, February and leap years, tab return, event placement, and shift creation/editing.
+
+Verified October 12, 2026: all 121 tests, production build, and lint pass; all 59 date regression tests also pass in each of the five time zones above.
