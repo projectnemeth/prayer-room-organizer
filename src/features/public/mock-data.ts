@@ -145,7 +145,7 @@ export const mockPrayerFocus: PrayerFocus = getPrayerFocusForDayOfWeek(1);
 const altarInitiativeWeekdays = Array.from({ length: 30 }, (_, index) => {
   const day = String(index + 1).padStart(2, "0");
   const date = `2026-10-${day}`;
-  const weekday = new Date(`${date}T12:00:00-06:00`).getDay();
+  const weekday = getChurchDay(new Date(`${date}T12:00:00Z`)).dayOfWeek;
   return weekday > 0 && weekday < 6 ? date : null;
 }).filter((date): date is string => date !== null);
 

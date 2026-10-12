@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import type { GatheringKind, PublicGathering } from "./types";
 import { getSupabaseBrowserClient } from "../../lib/supabase";
+import { useChurchDay } from './useChurchDay';
+import {
+  churchTimeZone, getChurchDay, calendarDate, calendarDateKey as dateKey,
+  addCalendarDays as addDays, addCalendarMonths as addMonths,
+  startOfCalendarWeek as startOfWeek, startOfCalendarMonth, formatCalendarDate,
+} from '../../lib/church-time';
 
 interface PublicCalendarProps {
   gatherings?: PublicGathering[];
@@ -36,48 +42,21 @@ const kindLabels: Record<GatheringKind, string> = {
 };
 
 const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const churchTimeZone = "America/Denver";
-
-function dateKey(value: Date) {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: churchTimeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
-}
-
 function gatheringDateKey(gathering: PublicGathering) {
-  return dateKey(new Date(gathering.startsAt));
-}
-
-function parseDateKey(value: string) {
-  return new Date(`${value}T12:00:00`);
-}
-
-function startOfWeek(value: Date) {
-  const start = new Date(value);
-  start.setDate(start.getDate() - start.getDay());
-  return start;
-}
-
-function addDays(value: Date, count: number) {
-  const next = new Date(value);
-  next.setDate(next.getDate() + count);
-  return next;
-}
-
-function addMonths(value: Date, count: number) {
-  return new Date(value.getFullYear(), value.getMonth() + count, 1);
+  return getChurchDay(new Date(gathering.startsAt)).dateKey;
 }
 
 function formatCalendarHeading(value: Date) {
-  return new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(value);
+  return formatCalendarDate(value, { month: "long", year: "numeric" });
 }
 
 function formatWeekHeading(start: Date) {
   const end = addDays(start, 6);
-  const monthDay = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
-  return `${monthDay.format(start)}–${monthDay.format(end)}, ${end.getFullYear()}`;
+  return `${formatCalendarDate(start, { month: "short", day: "numeric" })}–${formatCalendarDate(end, { month: "short", day: "numeric" })}, ${end.getUTCFullYear()}`;
 }
 
 function formatDayLabel(value: Date) {
-  return new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(value);
+  return formatCalendarDate(value, { weekday: "short", month: "short", day: "numeric" });
 }
 
 function eventTime(gathering: PublicGathering) {
@@ -98,9 +77,9 @@ function CalendarEvent({ gathering }: { gathering: PublicGathering }) {
 }
 
 function MonthGrid({ month, gatheringsByDate }: { month: Date; gatheringsByDate: Map<string, PublicGathering[]> }) {
-  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
+  const firstDay = startOfCalendarMonth(month);
   const gridStart = startOfWeek(firstDay);
-  const finalDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  const finalDay = addDays(addMonths(month, 1), -1);
   const gridEnd = addDays(startOfWeek(finalDay), 6);
   const cellCount = Math.round((gridEnd.getTime() - gridStart.getTime()) / 86_400_000) + 1;
   const days = Array.from({ length: cellCount }, (_, index) => addDays(gridStart, index));
@@ -108,7 +87,7 @@ function MonthGrid({ month, gatheringsByDate }: { month: Date; gatheringsByDate:
   return (
     <>
       <div className="space-y-2 md:hidden">
-        {days.filter((day) => day.getMonth() === month.getMonth()).map((day) => {
+        {days.filter((day) => day.getUTCMonth() === month.getUTCMonth()).map((day) => {
           const events = gatheringsByDate.get(dateKey(day)) ?? [];
           return (
             <section className="border border-altar-sage/25 bg-white/40 p-3" key={dateKey(day)}>
@@ -128,11 +107,11 @@ function MonthGrid({ month, gatheringsByDate }: { month: Date; gatheringsByDate:
         </div>
         <div className="grid grid-cols-7 border-l border-altar-sage/25">
           {days.map((day) => {
-            const inCurrentMonth = day.getMonth() === month.getMonth();
+            const inCurrentMonth = day.getUTCMonth() === month.getUTCMonth();
             const events = gatheringsByDate.get(dateKey(day)) ?? [];
             return (
               <section className={`min-h-36 border-b border-r border-altar-sage/25 p-2 ${inCurrentMonth ? "bg-white/40" : "bg-altar-stone/15"}`} key={dateKey(day)}>
-                <p className={`mb-2 text-sm font-semibold ${inCurrentMonth ? "text-altar-teal" : "text-altar-sage/70"}`}>{day.getDate()}</p>
+                <p className={`mb-2 text-sm font-semibold ${inCurrentMonth ? "text-altar-teal" : "text-altar-sage/70"}`}>{day.getUTCDate()}</p>
                 <div className="space-y-1.5">
                   {events.map((gathering) => <CalendarEvent gathering={gathering} key={gathering.id} />)}
                 </div>
@@ -183,11 +162,13 @@ export function PublicCalendar({ gatherings: suppliedGatherings }: PublicCalenda
   const [loadedGatherings, setLoadedGatherings] = useState<PublicGathering[]>(suppliedGatherings ?? []);
   const [loadError, setLoadError] = useState<string | null>(null);
   const gatherings = suppliedGatherings ?? loadedGatherings;
-  const firstGathering = gatherings[0];
-  const initialDate = firstGathering ? parseDateKey(gatheringDateKey(firstGathering)) : new Date();
+  const churchDay = useChurchDay();
   const [filter, setFilter] = useState<"all" | GatheringKind>("all");
   const [view, setView] = useState<CalendarView>("month");
-  const [cursor, setCursor] = useState(() => new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+  // null follows today; an explicit cursor preserves deliberate browsing.
+  const [browsedDate, setBrowsedDate] = useState<Date | null>(null);
+  const cursor = browsedDate ?? calendarDate(churchDay.dateKey);
+  const monthStart = startOfCalendarMonth(cursor);
   useEffect(() => {
     if (suppliedGatherings) return;
     let active = true;
@@ -198,10 +179,6 @@ export function PublicCalendar({ gatherings: suppliedGatherings }: PublicCalenda
         if (!active) return;
         const records = ((data ?? []) as PublicEventRow[]).map(mapPublicEvent);
         setLoadedGatherings(records);
-        if (records[0]) {
-          const date = parseDateKey(gatheringDateKey(records[0]));
-          setCursor(new Date(date.getFullYear(), date.getMonth(), 1));
-        }
       } catch {
         if (active) setLoadError("Gatherings could not be loaded right now. Please try again shortly.");
       }
@@ -223,8 +200,15 @@ export function PublicCalendar({ gatherings: suppliedGatherings }: PublicCalenda
   }, [visibleGatherings]);
   const weekStart = startOfWeek(cursor);
 
-  const previous = () => setCursor((current) => view === "month" ? addMonths(current, -1) : addDays(current, -7));
-  const next = () => setCursor((current) => view === "month" ? addMonths(current, 1) : addDays(current, 7));
+  const previous = () => setBrowsedDate(view === "month" ? addMonths(cursor, -1) : addDays(cursor, -7));
+  const next = () => setBrowsedDate(view === "month" ? addMonths(cursor, 1) : addDays(cursor, 7));
+  const today = () => setBrowsedDate(null);
+  const periodStart = view === 'month' ? monthStart : weekStart;
+  const periodEnd = view === 'month' ? addMonths(monthStart, 1) : addDays(weekStart, 7);
+  const hasPeriodGatherings = visibleGatherings.some((gathering) => {
+    const key = gatheringDateKey(gathering);
+    return key >= dateKey(periodStart) && key < dateKey(periodEnd);
+  });
 
   return (
     <main className="min-h-full bg-altar-parchment px-4 py-10 text-altar-ink sm:px-10 sm:py-14 lg:px-16">
@@ -274,14 +258,17 @@ export function PublicCalendar({ gatherings: suppliedGatherings }: PublicCalenda
         <section className="mt-7" aria-labelledby="calendar-period">
           <div className="mb-5 grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:flex sm:justify-between sm:gap-4">
             <button aria-label={`Previous ${view}`} className="focus-ring rounded-sm border border-altar-teal px-2 py-2 text-sm font-semibold text-altar-teal hover:bg-white/60 sm:px-3" onClick={previous} type="button"><span className="sm:hidden">←</span><span className="hidden sm:inline">← Previous</span></button>
-            <h2 className="text-center font-display text-xl text-altar-teal sm:text-3xl" id="calendar-period">{view === "month" ? formatCalendarHeading(cursor) : formatWeekHeading(weekStart)}</h2>
+            <div className="flex flex-col items-center gap-2">
+              <h2 className="text-center font-display text-xl text-altar-teal sm:text-3xl" id="calendar-period">{view === "month" ? formatCalendarHeading(cursor) : formatWeekHeading(weekStart)}</h2>
+              <button className="focus-ring rounded-sm border border-altar-teal px-3 py-1 text-sm font-semibold text-altar-teal hover:bg-white/60" onClick={today} type="button">Today</button>
+            </div>
             <button aria-label={`Next ${view}`} className="focus-ring rounded-sm border border-altar-teal px-2 py-2 text-sm font-semibold text-altar-teal hover:bg-white/60 sm:px-3" onClick={next} type="button"><span className="sm:hidden">→</span><span className="hidden sm:inline">Next →</span></button>
           </div>
 
           {view === "month" ? <MonthGrid gatheringsByDate={gatheringsByDate} month={cursor} /> : <WeekGrid gatheringsByDate={gatheringsByDate} weekStart={weekStart} />}
         </section>
 
-        {gatherings.length === 0 && !loadError ? <aside className="mt-8 border-l-2 border-altar-gold bg-white/45 p-5 text-sm leading-6 text-altar-ink/75">No gatherings have been published yet. Please check back soon.</aside> : null}
+        {!hasPeriodGatherings && !loadError ? <aside className="mt-8 border-l-2 border-altar-gold bg-white/45 p-5 text-sm leading-6 text-altar-ink/75">{filter === 'all' ? `No gatherings have been published for this ${view}. Please check back soon.` : `No ${kindLabels[filter]} gatherings are listed for this ${view}. Try All gatherings or another date.`}</aside> : null}
       </div>
     </main>
   );

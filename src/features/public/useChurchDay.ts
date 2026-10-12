@@ -10,7 +10,16 @@ export function useChurchDay() {
       setDay((current) => current.dateKey === next.dateKey ? current : next)
     }
     const timer = window.setInterval(refresh, 30_000)
-    return () => window.clearInterval(timer)
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [])
 
   return day

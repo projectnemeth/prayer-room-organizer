@@ -32,3 +32,9 @@ The public signup on Home, Initiatives, Resources, and `/updates` embeds the pub
 ## Daily worship playlists
 
 Home and Resources use the versioned day 1–31 registry in `src/features/public/playlist-links.json`, repeating each month according to the Denver-local calendar day. The `spotify` destination comes from the supplied database export's **Short URL (Spotify)** column (trim trailing whitespace in CSV headers). The `spotifyEmbed` player URL comes from **Embed Color-Compact (152px)**. When a new export is supplied, update this registry; the site does not fetch the source database live. Short-link destinations can be maintained through `altar.day` without changing the website buttons.
+
+## Calendar dates and rollover checks
+
+Daily resources and scheduling follow `America/Denver`, including daylight saving. Calendars follow the current date until a visitor browses another period; Today returns to the current period. Coordinator inputs always show and save Denver times, regardless of the browser's time zone. New times in a skipped or repeated daylight-saving hour require a different time; editing an unchanged existing time preserves its original instant.
+
+Run `npm test`, `npm run build`, and `npm run lint` for the standard checks. Run `npm run test:timezones` for the permanent date regression suite in Denver, UTC, New York, Tokyo, and Honolulu, including month/year boundaries, February and leap years, tab return, event placement, and shift creation/editing.
